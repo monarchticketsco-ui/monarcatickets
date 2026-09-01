@@ -44,3 +44,5 @@ npx supabase login
 npx supabase link --project-ref <tu-project-ref>
 npx supabase db push
 ```
+
+<!-- deploy fix: repo publico, 2026-09-01T06:43:27Z -->
