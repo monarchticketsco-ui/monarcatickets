@@ -26,7 +26,7 @@ supabase/
 - [ ] Escribirle a Bold para preguntar por un programa de marketplace/pagos a terceros no publicado (ver blueprint seccion 04)
 - [ ] Cuenta Factus o Alegra activada en modo pruebas
 - [ ] Confirmar con el contador quien factura al comprador final (organizador vs. plataforma)
-- [ ] Proyecto Supabase creado (`supabase.com/dashboard`)
+- [x] Proyecto Supabase creado y esquema aplicado (`supabase db push`) — verificado con una consulta real
 - [ ] Proyecto Vercel creado y enlazado a este repo
 
 ## Instalacion local
