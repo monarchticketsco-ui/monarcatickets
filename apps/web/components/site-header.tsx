@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,8 +21,8 @@ export async function SiteHeader() {
   return (
     <header className="site-header">
       <div className="site-header-inner">
-        <Link href="/" className="brand">
-          MONARCA <span className="brand-tickets">TICKETS</span>
+        <Link href="/" className="brand" aria-label="Monarca Tickets — inicio">
+          <Image src="/logo.png" alt="Monarca Tickets" width={172} height={52} priority />
         </Link>
         <nav className="site-nav">
           <Link href="/eventos" className="nav-link">

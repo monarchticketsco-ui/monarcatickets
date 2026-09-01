@@ -1,3 +1,4 @@
+import { CATEGORIAS } from "@/lib/event-visuals";
 import { crearEvento } from "./actions";
 
 export default async function NuevoEventoPage({
@@ -27,7 +28,14 @@ export default async function NuevoEventoPage({
           </div>
           <div className="field">
             <label htmlFor="category">Categoria</label>
-            <input id="category" name="category" type="text" placeholder="Concierto, teatro, festival..." />
+            <select id="category" name="category" defaultValue="">
+              <option value="">Sin categoria</option>
+              {CATEGORIAS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label htmlFor="starts_at">Fecha y hora</label>
