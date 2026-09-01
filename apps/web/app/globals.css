@@ -326,6 +326,38 @@ fieldset label {
   max-width: none;
 }
 
+.alert-success {
+  background: var(--ok-soft);
+  border: 1px solid var(--green-soft);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  max-width: 560px;
+}
+
+.alert-success strong {
+  color: var(--green);
+}
+
+.key-reveal {
+  display: block;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 4px 0 10px;
+  font-size: 0.92rem;
+  word-break: break-all;
+  color: var(--text);
+}
+
+.key-reveal-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+}
+
 /* ---------- badges ---------- */
 
 .badge {

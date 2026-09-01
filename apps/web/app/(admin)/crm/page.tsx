@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/admin";
-import { actualizarDianStatus } from "./actions";
+import { actualizarDianStatus, revocarApiCliente } from "./actions";
+import { ApiClientForm } from "./api-client-form";
 
 const ESTADOS_DIAN = ["no_habilitado", "en_proceso", "habilitado"] as const;
 
@@ -18,7 +19,7 @@ const ORDEN_BADGE: Record<string, string> = {
 export default async function CrmPage() {
   const { supabase } = await requireAdmin();
 
-  const [organizersRes, eventsRes, ordenesRecientesRes, pagadasRes] = await Promise.all([
+  const [organizersRes, eventsRes, ordenesRecientesRes, pagadasRes, apiClientsRes] = await Promise.all([
     supabase
       .from("organizers")
       .select("id, legal_name, nit, dian_status, commission_rate, events(count)")
@@ -30,12 +31,17 @@ export default async function CrmPage() {
       .order("created_at", { ascending: false })
       .limit(20),
     supabase.from("orders").select("total_cop").eq("status", "pagada"),
+    supabase
+      .from("api_clients")
+      .select("id, company_name, scopes, rate_limit_per_min, created_at")
+      .order("created_at", { ascending: false }),
   ]);
 
   const organizadores = organizersRes.data ?? [];
   const eventos = eventsRes.data ?? [];
   const ordenesRecientes = ordenesRecientesRes.data ?? [];
   const ingresosTotalesCop = (pagadasRes.data ?? []).reduce((acc, o) => acc + o.total_cop, 0);
+  const apiClientes = apiClientsRes.data ?? [];
 
   const eventosPorEstado = eventos.reduce<Record<string, number>>((acc, e) => {
     acc[e.status] = (acc[e.status] ?? 0) + 1;
@@ -166,6 +172,62 @@ export default async function CrmPage() {
           </table>
         </div>
       )}
+      <h2>Credenciales de API (integraciones)</h2>
+      <p className="page-lede">
+        Llaves para integradores externos (bot de WhatsApp, apps de socios, etc.) que consumen la
+        API publica en <code>/api/v1</code>. La llave en texto plano solo se muestra una vez, al
+        crearla.
+      </p>
+
+      {apiClientes.length === 0 ? (
+        <p className="empty-state">Todavia no hay credenciales de API generadas.</p>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Integrador</th>
+                <th>Scopes</th>
+                <th>Limite/min</th>
+                <th>Creada</th>
+                <th>Revocar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {apiClientes.map((cliente) => (
+                <tr key={cliente.id}>
+                  <td>{cliente.company_name}</td>
+                  <td>
+                    {(cliente.scopes ?? []).map((scope: string) => (
+                      <span key={scope} className="badge badge-blue" style={{ marginRight: 6 }}>
+                        {scope}
+                      </span>
+                    ))}
+                  </td>
+                  <td>{cliente.rate_limit_per_min}</td>
+                  <td>{new Date(cliente.created_at).toLocaleDateString("es-CO")}</td>
+                  <td>
+                    <form
+                      action={async () => {
+                        "use server";
+                        await revocarApiCliente(cliente.id);
+                      }}
+                    >
+                      <button type="submit" className="btn btn-secondary btn-sm">
+                        Revocar
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div style={{ marginTop: 16 }}>
+        <ApiClientForm />
+      </div>
     </main>
   );
 }
