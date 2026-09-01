@@ -8,32 +8,36 @@ export default async function NuevoEventoPage({
   const { error } = await searchParams;
 
   return (
-    <main>
+    <main className="container">
       <h1>Crear evento</h1>
       {error && <p role="alert">{error}</p>}
-      <form action={crearEvento}>
-        <label>
-          Nombre del evento
-          <input name="name" type="text" required />
-        </label>
-        <label>
-          Lugar (venue)
-          <input name="venue" type="text" required />
-        </label>
-        <label>
-          Ciudad
-          <input name="city" type="text" required />
-        </label>
-        <label>
-          Categoria
-          <input name="category" type="text" placeholder="Concierto, teatro, festival..." />
-        </label>
-        <label>
-          Fecha y hora
-          <input name="starts_at" type="datetime-local" required />
-        </label>
-        <button type="submit">Crear (queda en borrador)</button>
-      </form>
+      <div className="card" style={{ maxWidth: 480 }}>
+        <form action={crearEvento} className="form">
+          <div className="field">
+            <label htmlFor="name">Nombre del evento</label>
+            <input id="name" name="name" type="text" required />
+          </div>
+          <div className="field">
+            <label htmlFor="venue">Lugar (venue)</label>
+            <input id="venue" name="venue" type="text" required />
+          </div>
+          <div className="field">
+            <label htmlFor="city">Ciudad</label>
+            <input id="city" name="city" type="text" required />
+          </div>
+          <div className="field">
+            <label htmlFor="category">Categoria</label>
+            <input id="category" name="category" type="text" placeholder="Concierto, teatro, festival..." />
+          </div>
+          <div className="field">
+            <label htmlFor="starts_at">Fecha y hora</label>
+            <input id="starts_at" name="starts_at" type="datetime-local" required />
+          </div>
+          <button type="submit" className="btn btn-primary">
+            Crear (queda en borrador)
+          </button>
+        </form>
+      </div>
     </main>
   );
 }

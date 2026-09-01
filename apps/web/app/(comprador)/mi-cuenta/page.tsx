@@ -9,6 +9,13 @@ const ESTADO_LABEL: Record<string, string> = {
   reembolsada: "Reembolsada",
 };
 
+const ESTADO_BADGE: Record<string, string> = {
+  pendiente: "badge badge-warning",
+  pagada: "badge badge-green",
+  fallida: "badge badge-danger",
+  reembolsada: "badge",
+};
+
 export default async function MiCuentaPage({
   searchParams,
 }: {
@@ -37,31 +44,35 @@ export default async function MiCuentaPage({
     .order("created_at", { ascending: false });
 
   return (
-    <main>
+    <main className="container">
       <h1>Mi cuenta</h1>
       {error && <p role="alert">{error}</p>}
 
       <h2>Perfil</h2>
-      <p>
-        Correo: {user.email} — Rol: {perfil?.role ?? "comprador"}
-      </p>
-      <form action={actualizarPerfil}>
-        <label>
-          Nombre completo
-          <input name="full_name" type="text" defaultValue={perfil?.full_name ?? ""} />
-        </label>
-        <label>
-          Telefono
-          <input name="phone" type="text" defaultValue={perfil?.phone ?? ""} />
-        </label>
-        <button type="submit">Guardar</button>
-      </form>
+      <div className="card" style={{ maxWidth: 440 }}>
+        <p className="muted" style={{ marginTop: 0 }}>
+          {user.email} · {perfil?.role ?? "comprador"}
+        </p>
+        <form action={actualizarPerfil} className="form">
+          <div className="field">
+            <label htmlFor="full_name">Nombre completo</label>
+            <input id="full_name" name="full_name" type="text" defaultValue={perfil?.full_name ?? ""} />
+          </div>
+          <div className="field">
+            <label htmlFor="phone">Telefono</label>
+            <input id="phone" name="phone" type="tel" defaultValue={perfil?.phone ?? ""} />
+          </div>
+          <button type="submit" className="btn btn-primary">
+            Guardar
+          </button>
+        </form>
+      </div>
 
       <h2>Mis compras</h2>
       {!ordenes || ordenes.length === 0 ? (
-        <p>Todavia no has comprado boletos.</p>
+        <p className="empty-state">Todavia no has comprado boletos.</p>
       ) : (
-        <ul>
+        <ul className="list-plain">
           {ordenes.map((orden) => {
             const evento = orden.events as unknown as {
               name: string;
@@ -77,30 +88,39 @@ export default async function MiCuentaPage({
             }[];
 
             return (
-              <li key={orden.id}>
-                <p>
-                  <strong>{evento?.name ?? "Evento"}</strong>
-                  {evento && ` — ${evento.venue}, ${evento.city} — ${new Date(evento.starts_at).toLocaleString("es-CO")}`}
-                </p>
-                <p>
-                  Estado: {ESTADO_LABEL[orden.status] ?? orden.status} — Total: $
-                  {orden.total_cop.toLocaleString("es-CO")} — Comprado el{" "}
-                  {new Date(orden.created_at).toLocaleDateString("es-CO")}
-                </p>
-                <ul>
+              <li key={orden.id} className="card">
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div>
+                    <h3 style={{ margin: "0 0 4px" }}>{evento?.name ?? "Evento"}</h3>
+                    {evento && (
+                      <p className="muted" style={{ margin: 0 }}>
+                        {evento.venue}, {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO")}
+                      </p>
+                    )}
+                  </div>
+                  <span className={ESTADO_BADGE[orden.status] ?? "badge"}>
+                    {ESTADO_LABEL[orden.status] ?? orden.status}
+                  </span>
+                </div>
+
+                <ul className="list-plain" style={{ gap: 4, marginTop: 14 }}>
                   {items.map((item) => (
-                    <li key={item.id}>
+                    <li key={item.id} className="muted">
                       {item.ticket_types?.name ?? "Boleto"} x{item.quantity} — $
                       {item.unit_price_cop.toLocaleString("es-CO")} c/u
                     </li>
                   ))}
                 </ul>
+
+                <p className="muted" style={{ marginTop: 10, marginBottom: 0 }}>
+                  Total: ${orden.total_cop.toLocaleString("es-CO")} · Comprado el{" "}
+                  {new Date(orden.created_at).toLocaleDateString("es-CO")}
+                </p>
+
                 {orden.status === "pagada" && (
-                  <p>
-                    <em>
-                      Boletos individuales con QR: todavia no se generan automaticamente
-                      (proxima fase) — esta orden ya quedo confirmada como pagada.
-                    </em>
+                  <p className="muted" style={{ fontSize: "0.85rem", marginTop: 10, marginBottom: 0 }}>
+                    Boletos individuales con QR: todavia no se generan automaticamente (proxima
+                    fase) — esta orden ya quedo confirmada como pagada.
                   </p>
                 )}
               </li>

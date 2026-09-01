@@ -12,7 +12,7 @@ export default async function EventoPublicoPage({
 
   const { data: evento } = await supabase
     .from("events")
-    .select("id, name, description, venue, city, starts_at, status")
+    .select("id, name, description, venue, city, starts_at, status, category")
     .eq("id", id)
     .in("status", ["publicado", "en_venta"])
     .single();
@@ -28,34 +28,48 @@ export default async function EventoPublicoPage({
   const ventaAbierta = evento.status === "en_venta";
 
   return (
-    <main>
-      <h1>{evento.name}</h1>
-      <p>
-        {evento.venue} — {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO")}
-      </p>
-      {evento.description && <p>{evento.description}</p>}
+    <main className="container">
+      <div style={{ marginBottom: 28 }}>
+        {evento.category && <p className="event-card-eyebrow">{evento.category}</p>}
+        <h1>{evento.name}</h1>
+        <p className="page-lede">
+          {evento.venue} · {evento.city} ·{" "}
+          {new Date(evento.starts_at).toLocaleString("es-CO", {
+            dateStyle: "long",
+            timeStyle: "short",
+          })}
+        </p>
+        {evento.description && <p>{evento.description}</p>}
+      </div>
 
       <h2>Boletos</h2>
       {!tiposDeBoleto || tiposDeBoleto.length === 0 ? (
-        <p>Todavia no hay boletos a la venta para este evento.</p>
+        <p className="empty-state">Todavia no hay boletos a la venta para este evento.</p>
       ) : (
-        <ul>
+        <div className="card">
           {tiposDeBoleto.map((t) => {
             const disponibles = t.capacity - t.sold_count;
             return (
-              <li key={t.id}>
-                <p>
-                  {t.name} — ${t.price_cop.toLocaleString("es-CO")} —{" "}
-                  {disponibles > 0 ? `${disponibles} disponibles` : "agotado"}
-                </p>
+              <div className="ticket-row" key={t.id}>
+                <div className="ticket-info">
+                  <h3 style={{ margin: "0 0 4px" }}>{t.name}</h3>
+                  <p className="price" style={{ margin: 0 }}>
+                    ${t.price_cop.toLocaleString("es-CO")} COP
+                  </p>
+                  <span className={`badge ${disponibles > 0 ? "badge-green" : "badge-danger"}`}>
+                    {disponibles > 0 ? `${disponibles} disponibles` : "Agotado"}
+                  </span>
+                </div>
                 {ventaAbierta && <ComprarBoton ticketTypeId={t.id} disponibles={disponibles} />}
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
       )}
       {!ventaAbierta && tiposDeBoleto && tiposDeBoleto.length > 0 && (
-        <p>La venta de boletos para este evento aun no esta abierta.</p>
+        <p className="muted" style={{ marginTop: 16 }}>
+          La venta de boletos para este evento aun no esta abierta.
+        </p>
       )}
     </main>
   );

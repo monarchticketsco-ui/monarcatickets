@@ -14,16 +14,28 @@ export default async function EventosPage() {
     .order("starts_at", { ascending: true });
 
   return (
-    <main>
-      <h1>Eventos</h1>
+    <main className="container">
+      <div className="page-lede" style={{ marginBottom: 28 }}>
+        <h1>Eventos</h1>
+        <p className="page-lede">Boletos disponibles ahora mismo en Colombia.</p>
+      </div>
+
       {!eventos || eventos.length === 0 ? (
-        <p>No hay eventos en venta todavia.</p>
+        <p className="empty-state">No hay eventos en venta todavia.</p>
       ) : (
-        <ul>
+        <ul className="event-grid">
           {eventos.map((e) => (
             <li key={e.id}>
-              <Link href={`/eventos/${e.id}`}>
-                {e.name} — {e.city} — {new Date(e.starts_at).toLocaleDateString("es-CO")}
+              <Link href={`/eventos/${e.id}`} className="event-card">
+                {e.category && <p className="event-card-eyebrow">{e.category}</p>}
+                <h3>{e.name}</h3>
+                <p className="muted">
+                  {e.city} · {new Date(e.starts_at).toLocaleDateString("es-CO", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
               </Link>
             </li>
           ))}

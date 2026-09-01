@@ -51,17 +51,20 @@ export function ComprarBoton({
 
   return (
     <div>
-      <input
-        type="number"
-        min={1}
-        max={maximo}
-        value={cantidad}
-        onChange={(e) => setCantidad(Math.max(1, Math.min(maximo, Number(e.target.value))))}
-      />
-      <button onClick={comprar} disabled={cargando}>
-        {cargando ? "Redirigiendo a Bold..." : "Comprar"}
-      </button>
-      {error && <p>{error}</p>}
+      <div className="qty-form">
+        <input
+          type="number"
+          min={1}
+          max={maximo}
+          value={cantidad}
+          onChange={(e) => setCantidad(Math.max(1, Math.min(maximo, Number(e.target.value))))}
+          aria-label="Cantidad"
+        />
+        <button onClick={comprar} disabled={cargando} className="btn btn-primary">
+          {cargando ? "Redirigiendo a Bold..." : "Comprar"}
+        </button>
+      </div>
+      {error && <p role="alert" style={{ marginTop: 10 }}>{error}</p>}
     </div>
   );
 }
