@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ComprarBoton } from "./comprar-boton";
 
 export default async function EventoPublicoPage({
   params,
@@ -24,6 +25,8 @@ export default async function EventoPublicoPage({
     .eq("event_id", id)
     .order("price_cop", { ascending: false });
 
+  const ventaAbierta = evento.status === "en_venta";
+
   return (
     <main>
       <h1>{evento.name}</h1>
@@ -41,13 +44,18 @@ export default async function EventoPublicoPage({
             const disponibles = t.capacity - t.sold_count;
             return (
               <li key={t.id}>
-                {t.name} — ${t.price_cop.toLocaleString("es-CO")} —{" "}
-                {disponibles > 0 ? `${disponibles} disponibles` : "agotado"}
-                {/* TODO (Fase 2): boton "comprar" que llama a /api/checkout */}
+                <p>
+                  {t.name} — ${t.price_cop.toLocaleString("es-CO")} —{" "}
+                  {disponibles > 0 ? `${disponibles} disponibles` : "agotado"}
+                </p>
+                {ventaAbierta && <ComprarBoton ticketTypeId={t.id} disponibles={disponibles} />}
               </li>
             );
           })}
         </ul>
+      )}
+      {!ventaAbierta && tiposDeBoleto && tiposDeBoleto.length > 0 && (
+        <p>La venta de boletos para este evento aun no esta abierta.</p>
       )}
     </main>
   );
