@@ -26,10 +26,16 @@ export async function crearTipoDeBoleto(eventId: string, formData: FormData) {
 }
 
 export async function publicarEvento(eventId: string) {
-  const { supabase } = await requireOrganizer();
+  const { supabase, organizer } = await requireOrganizer();
 
-  // TODO (fase 3): bloquear si organizer.dian_status !== 'habilitado',
-  // segun lo que definas con tu contador (blueprint seccion 05).
+  if (organizer.dian_status !== "habilitado") {
+    redirect(
+      `/panel/eventos/${eventId}?error=${encodeURIComponent(
+        "Tu perfil de organizador debe estar habilitado ante la DIAN antes de poner boletos en venta. El equipo de Monarca Tickets revisa y activa este estado desde el CRM."
+      )}`
+    );
+  }
+
   const { error } = await supabase
     .from("events")
     .update({ status: "en_venta" })
