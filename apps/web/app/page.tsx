@@ -9,7 +9,7 @@ export default async function HomePage() {
 
   const { data: eventos } = await supabase
     .from("events")
-    .select("id, name, venue, city, starts_at, category")
+    .select("id, name, venue, city, starts_at, category, image_url")
     .in("status", ["publicado", "en_venta"])
     .order("starts_at", { ascending: true })
     .limit(24);
@@ -39,7 +39,7 @@ export default async function HomePage() {
             <li key={e.id}>
               <Link href={`/eventos/${e.id}`} className="event-card">
                 <div className="event-card-media">
-                  <img src={imagenDeEvento(e.id, e.category, 500)} alt="" />
+                  <img src={e.image_url || imagenDeEvento(e.id, e.category, 500)} alt="" />
                   {e.category && <p className="event-card-eyebrow">{e.category}</p>}
                 </div>
                 <div className="event-card-body">

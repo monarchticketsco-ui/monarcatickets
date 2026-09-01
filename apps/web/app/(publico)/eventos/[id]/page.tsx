@@ -13,7 +13,7 @@ export default async function EventoPublicoPage({
 
   const { data: evento } = await supabase
     .from("events")
-    .select("id, name, description, venue, city, starts_at, status, category")
+    .select("id, name, description, venue, city, starts_at, status, category, image_url")
     .eq("id", id)
     .in("status", ["publicado", "en_venta"])
     .single();
@@ -34,7 +34,7 @@ export default async function EventoPublicoPage({
         className="hero-slide"
         style={{ borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", marginBottom: 28 }}
       >
-        <img src={imagenDeEvento(evento.id, evento.category, 1400)} alt="" />
+        <img src={evento.image_url || imagenDeEvento(evento.id, evento.category, 1400)} alt="" />
         <div className="hero-slide-scrim" />
         <div className="hero-slide-content" style={{ maxWidth: "none" }}>
           {evento.category && <p className="event-card-eyebrow">{evento.category}</p>}

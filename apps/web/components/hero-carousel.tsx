@@ -11,6 +11,7 @@ type EventoDestacado = {
   city: string;
   starts_at: string;
   category: string | null;
+  image_url: string | null;
 };
 
 export function HeroCarousel({ eventos }: { eventos: EventoDestacado[] }) {
@@ -51,7 +52,7 @@ export function HeroCarousel({ eventos }: { eventos: EventoDestacado[] }) {
   return (
     <div className="hero">
       <div className="hero-slide">
-        <img src={imagenDeEvento(evento.id, evento.category, 1400)} alt="" />
+        <img src={evento.image_url || imagenDeEvento(evento.id, evento.category, 1400)} alt="" />
         <div className="hero-slide-scrim" />
         <div className="hero-slide-content">
           {evento.category && <p className="event-card-eyebrow">{evento.category}</p>}

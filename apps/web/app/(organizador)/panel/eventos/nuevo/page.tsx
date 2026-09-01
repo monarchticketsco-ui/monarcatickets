@@ -41,6 +41,13 @@ export default async function NuevoEventoPage({
             <label htmlFor="starts_at">Fecha y hora</label>
             <input id="starts_at" name="starts_at" type="datetime-local" required />
           </div>
+          <div className="field">
+            <label htmlFor="image_url">URL de imagen de banner (opcional)</label>
+            <input id="image_url" name="image_url" type="url" placeholder="https://..." />
+            <p className="muted" style={{ fontSize: "0.82rem", margin: "2px 0 0" }}>
+              Si la dejas vacia, usamos una foto segun la categoria del evento.
+            </p>
+          </div>
           <button type="submit" className="btn btn-primary">
             Crear (queda en borrador)
           </button>

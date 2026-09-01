@@ -11,6 +11,7 @@ export async function crearEvento(formData: FormData) {
   const city = String(formData.get("city"));
   const category = String(formData.get("category") || "");
   const startsAt = String(formData.get("starts_at"));
+  const imageUrl = String(formData.get("image_url") || "").trim();
 
   const { data, error } = await supabase
     .from("events")
@@ -21,6 +22,7 @@ export async function crearEvento(formData: FormData) {
       city,
       category: category || null,
       starts_at: new Date(startsAt).toISOString(),
+      image_url: imageUrl || null,
       status: "borrador",
     })
     .select("id")

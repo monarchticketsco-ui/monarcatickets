@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireOrganizer } from "@/lib/organizer";
-import { crearTipoDeBoleto, publicarEvento } from "./actions";
+import { imagenDeEvento } from "@/lib/event-visuals";
+import { actualizarImagen, crearTipoDeBoleto, publicarEvento } from "./actions";
 
 const ESTADO_BADGE: Record<string, string> = {
   borrador: "badge",
@@ -23,7 +24,7 @@ export default async function GestionEventoPage({
 
   const { data: evento } = await supabase
     .from("events")
-    .select("id, name, venue, city, category, starts_at, status")
+    .select("id, name, venue, city, category, starts_at, status, image_url")
     .eq("id", id)
     .eq("organizer_id", organizer.id)
     .single();
@@ -38,6 +39,7 @@ export default async function GestionEventoPage({
 
   const crearTipoDeBoletoConId = crearTipoDeBoleto.bind(null, id);
   const publicarEventoConId = publicarEvento.bind(null, id);
+  const actualizarImagenConId = actualizarImagen.bind(null, id);
 
   return (
     <main className="container">
@@ -49,6 +51,27 @@ export default async function GestionEventoPage({
       <p className="page-lede">
         {evento.venue} — {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO")}
       </p>
+
+      <h2>Imagen de banner</h2>
+      <div className="card" style={{ maxWidth: 480, display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <img
+          src={evento.image_url || imagenDeEvento(evento.id, evento.category, 300)}
+          alt=""
+          style={{ width: 160, aspectRatio: "16 / 10", objectFit: "cover", borderRadius: "var(--radius-sm)", flexShrink: 0 }}
+        />
+        <form action={actualizarImagenConId} className="form" style={{ flex: "1 1 200px" }}>
+          <div className="field">
+            <label htmlFor="image_url">URL de imagen</label>
+            <input id="image_url" name="image_url" type="url" placeholder="https://..." defaultValue={evento.image_url ?? ""} />
+            <p className="muted" style={{ fontSize: "0.82rem", margin: "2px 0 0" }}>
+              Vacio = usamos una foto segun la categoria.
+            </p>
+          </div>
+          <button type="submit" className="btn btn-secondary btn-sm">
+            Guardar imagen
+          </button>
+        </form>
+      </div>
 
       {evento.status === "borrador" && (
         <form action={publicarEventoConId} style={{ marginBottom: 8 }}>

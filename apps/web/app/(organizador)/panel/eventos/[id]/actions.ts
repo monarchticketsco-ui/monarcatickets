@@ -25,6 +25,24 @@ export async function crearTipoDeBoleto(eventId: string, formData: FormData) {
   revalidatePath(`/panel/eventos/${eventId}`);
 }
 
+export async function actualizarImagen(eventId: string, formData: FormData) {
+  const { supabase, organizer } = await requireOrganizer();
+
+  const imageUrl = String(formData.get("image_url") || "").trim();
+
+  const { error } = await supabase
+    .from("events")
+    .update({ image_url: imageUrl || null })
+    .eq("id", eventId)
+    .eq("organizer_id", organizer.id);
+
+  if (error) {
+    redirect(`/panel/eventos/${eventId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/panel/eventos/${eventId}`);
+}
+
 export async function publicarEvento(eventId: string) {
   const { supabase, organizer } = await requireOrganizer();
 
