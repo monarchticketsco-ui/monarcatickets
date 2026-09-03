@@ -5,14 +5,18 @@ import crypto from "crypto";
 //      https://developers.bold.co/pagos-en-linea/llaves-de-integracion
 //      https://developers.bold.co/webhook
 //
-// BOLD_API_KEY: la "llave de identidad" del panel de Bold
-//   (Integraciones > API Link de pagos). Es publica por diseno pero la
-//   usamos server-side igual porque es la unica forma de crear links.
-// BOLD_WEBHOOK_SECRET: la llave secreta que Bold usa para firmar los
-//   webhooks (Integraciones > Webhooks). Bold tiene mas de una llave
-//   secreta segun el producto (API Datafono / Boton de pagos) — hay que
-//   confirmar en el panel cual le corresponde a Link de pagos antes de
-//   ir a produccion. En modo pruebas Bold la deja como string vacio.
+// Confirmado con soporte de Bold (sep-2026): la API de Link de pagos
+// funciona con las MISMAS llaves del "Boton de pagos" — no hay llaves
+// separadas para "API pagos en linea". Ambas variables se sacan del
+// panel de Bold en Pagos > Boton de pagos > Llaves de produccion:
+//
+// BOLD_API_KEY: "Llave de identidad". Va en el header
+//   `Authorization: x-api-key <llave>` de cada request a
+//   POST /online/link/v1.
+// BOLD_WEBHOOK_SECRET: "Llave secreta". Bold la usa como llave HMAC-SHA256
+//   sobre el body del webhook (codificado en base64 antes de firmar) para
+//   producir el header `x-bold-signature`. En modo pruebas Bold firma con
+//   un string vacio.
 const BOLD_API_KEY = process.env.BOLD_API_KEY;
 const BOLD_BASE_URL = "https://integrations.api.bold.co";
 
