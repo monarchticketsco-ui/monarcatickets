@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { MobileNavToggle } from "@/components/mobile-nav-toggle";
 
 export async function SiteHeader() {
   const supabase = await createClient();
@@ -22,9 +23,9 @@ export async function SiteHeader() {
     <header className="site-header">
       <div className="site-header-inner">
         <Link href="/" className="brand" aria-label="Monarca Tickets — inicio">
-          <Image src="/logo.png" alt="Monarca Tickets" width={172} height={52} priority />
+          <Image src="/logo.png" alt="Monarca Tickets" width={210} height={64} priority />
         </Link>
-        <nav className="site-nav">
+        <MobileNavToggle>
           <Link href="/eventos" className="nav-link">
             Eventos
           </Link>
@@ -59,7 +60,7 @@ export async function SiteHeader() {
               </Link>
             </>
           )}
-        </nav>
+        </MobileNavToggle>
       </div>
     </header>
   );
