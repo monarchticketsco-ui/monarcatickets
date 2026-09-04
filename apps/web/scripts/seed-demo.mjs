@@ -55,6 +55,16 @@ const EVENTOS = [
   { org: 5, name: "Foro Nacional de Emprendimiento", venue: "Cámara de Comercio", city: "Bucaramanga", category: "Conferencia", date: "2026-10-13T09:00:00-05:00", tickets: [GA(90000, 500), VIP(220000, 80)] },
   { org: 1, name: "Circo Familiar: Mundo de Fantasía", venue: "Carpa Villa Country", city: "Bogotá", category: "Familiar", date: "2026-09-26T16:00:00-05:00", tickets: [GA(35000, 1500), VIP(70000, 200)] },
   { org: 1, name: "Feria de Juegos y Magia", venue: "Parque Caldas", city: "Manizales", category: "Familiar", date: "2026-10-25T14:00:00-05:00", tickets: [GA(25000, 2000), VIP(50000, 150)] },
+  { org: 0, name: "Reencuentro — Grandes Éxitos en Vivo", venue: "Coliseo Live Center", city: "Cali", category: "Concierto", date: "2026-11-14T20:00:00-05:00", tickets: [GA(140000, 2200), VIP(260000, 350)] },
+  { org: 0, name: "Noche Electrónica — Pulso Nocturno", venue: "Bunker Club", city: "Medellín", category: "Concierto", date: "2026-11-28T22:00:00-05:00", tickets: [GA(100000, 1800), VIP(200000, 250)] },
+  { org: 1, name: "Verano Sonoro Fest", venue: "Malecón del Río", city: "Cartagena", category: "Festival", date: "2026-11-22T15:00:00-05:00", tickets: [GA(160000, 4000), VIP(320000, 500)] },
+  { org: 2, name: "El Avaro", venue: "Teatro Jorge Isaacs", city: "Cali", category: "Teatro", date: "2026-10-18T19:00:00-05:00", tickets: [GA(50000, 350), VIP(90000, 70)] },
+  { org: 2, name: "Antígona", venue: "Teatro Colsubsidio", city: "Bogotá", category: "Teatro", date: "2026-11-08T19:30:00-05:00", tickets: [GA(55000, 420), VIP(100000, 90)] },
+  { org: 3, name: "Micrófono Abierto: Nuevas Voces", venue: "Casa del Humor", city: "Bogotá", category: "Comedia", date: "2026-10-25T21:00:00-05:00", tickets: [GA(40000, 250), VIP(75000, 50)] },
+  { org: 4, name: "Clásico del Pacífico: Delfines vs. Tiburones", venue: "Estadio Olímpico Jaime Morón", city: "Cartagena", category: "Deportivo", date: "2026-11-01T18:00:00-05:00", tickets: [GA(35000, 8000), VIP(120000, 900)] },
+  { org: 5, name: "Congreso de Inteligencia Artificial Aplicada", venue: "Corferias", city: "Bogotá", category: "Conferencia", date: "2026-11-05T08:00:00-05:00", tickets: [GA(180000, 900), VIP(450000, 120)] },
+  { org: 5, name: "Foro de Innovación Educativa", venue: "Universidad EAFIT", city: "Medellín", category: "Conferencia", date: "2026-11-19T09:00:00-05:00", tickets: [GA(80000, 600), VIP(190000, 90)] },
+  { org: 1, name: "Aventura en Familia: Circo de las Estrellas", venue: "Parque del Café", city: "Manizales", category: "Familiar", date: "2026-11-15T15:00:00-05:00", tickets: [GA(30000, 1200), VIP(60000, 180)] },
 ];
 
 async function crearOrganizador(def, i) {
