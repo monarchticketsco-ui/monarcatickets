@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verificarFirmaWebhook } from "@/lib/bold";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { generarBoletosParaOrden } from "@/lib/tickets";
+import { enviarConfirmacionCompra } from "@/lib/email";
 
 // Paso 5 del flujo de pago (blueprint Fig. 3): unica fuente de verdad de
 // que un pago se confirmo. Bold reintenta si no respondemos 200 en <2s
@@ -48,20 +50,63 @@ export async function POST(req: NextRequest) {
   }
 
   if (tipo === "SALE_APPROVED") {
-    const { error } = await admin
+    const { data: ordenPagada, error } = await admin
       .from("orders")
       .update({ status: "pagada", bold_payment_id: boldPaymentId })
       .eq("id", ordenId)
-      .eq("status", "pendiente");
+      .eq("status", "pendiente")
+      .select("user_id, total_cop, event_id")
+      .single();
 
-    if (error) {
+    if (error || !ordenPagada) {
       return NextResponse.json({ error: "error_actualizando_orden" }, { status: 500 });
     }
 
-    // TODO (Fase 2.1): generar tickets con QR firmado por cada order_item,
-    // emitir factura DIAN (Factus/Alegra) y notificar al comprador por
-    // correo. El estado 'pagada' ya es la fuente de verdad del pago —
-    // esto puede correr async sin bloquear la respuesta al webhook.
+    // Fase 2.1: generar los boletos individuales con QR firmado y avisarle
+    // al comprador por correo. El estado 'pagada' ya es la fuente de
+    // verdad del pago -- si alguno de estos dos pasos falla, no revertimos
+    // ni fallamos el webhook (Bold reintentaria un evento que en realidad
+    // ya se proceso). Simplemente queda registrado en los logs para
+    // resolverlo a mano.
+    try {
+      await generarBoletosParaOrden(admin, ordenId, ordenPagada.user_id);
+    } catch (err) {
+      console.error(`[bold webhook] No se pudieron generar los boletos de la orden ${ordenId}:`, err);
+    }
+
+    try {
+      const [{ data: authUser }, { data: perfil }, { data: evento }, { data: items }] = await Promise.all([
+        admin.auth.admin.getUserById(ordenPagada.user_id),
+        admin.from("profiles").select("full_name").eq("id", ordenPagada.user_id).single(),
+        admin.from("events").select("name, venue, city, starts_at").eq("id", ordenPagada.event_id).single(),
+        admin.from("order_items").select("quantity").eq("order_id", ordenId),
+      ]);
+
+      const correo = authUser?.user?.email;
+      if (correo && evento) {
+        const cantidadBoletos = (items ?? []).reduce((sum, item) => sum + (item.quantity as number), 0);
+        await enviarConfirmacionCompra({
+          to: correo,
+          nombre: perfil?.full_name,
+          eventoNombre: evento.name,
+          eventoVenue: evento.venue,
+          eventoCiudad: evento.city,
+          eventoFechaTexto: new Date(evento.starts_at).toLocaleString("es-CO", {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+            hour: "numeric",
+            minute: "2-digit",
+          }),
+          totalCop: ordenPagada.total_cop,
+          cantidadBoletos,
+        });
+      }
+    } catch (err) {
+      console.error(`[bold webhook] No se pudo enviar el correo de confirmacion de la orden ${ordenId}:`, err);
+    }
+
+    // TODO (Fase 2.2): emitir factura DIAN (Factus/Alegra).
   } else if (tipo === "SALE_REJECTED" || tipo === "VOID_APPROVED") {
     const { data: items } = await admin
       .from("order_items")
