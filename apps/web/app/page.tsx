@@ -54,7 +54,7 @@ export default async function HomePage() {
     .select("id, name, venue, city, starts_at, category, image_url")
     .in("status", ["publicado", "en_venta"])
     .order("starts_at", { ascending: true })
-    .limit(24);
+    .limit(30);
 
   const todos = eventos ?? [];
   const conFecha = todos.map((e) => ({
@@ -68,7 +68,7 @@ export default async function HomePage() {
 
   const destacados = conFecha.slice(0, 6);
   const recomendados = [...conFecha].sort((a, b) => hashString(a.id) - hashString(b.id)).slice(0, 4);
-  const proximos = conFecha.slice(0, 8);
+  const proximos = conFecha.slice(0, 20);
   const ciudades = Array.from(new Set(todos.map((e) => e.city))).sort();
 
   return (
