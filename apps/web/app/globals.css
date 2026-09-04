@@ -846,6 +846,16 @@ tbody tr:hover {
   }
 }
 
+@media (max-width: 640px) {
+  /* En el hero vertical (retrato) el contenido ocupa toda la mitad
+     inferior; las flechas centradas quedaban encima del titular.
+     Se suben a la esquina superior, lejos del texto. */
+  .hero-nav {
+    top: 16px;
+    transform: none;
+  }
+}
+
 .hero-dots {
   position: absolute;
   right: 20px;

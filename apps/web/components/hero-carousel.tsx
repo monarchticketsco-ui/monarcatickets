@@ -9,7 +9,7 @@ type EventoDestacado = {
   name: string;
   venue: string;
   city: string;
-  starts_at: string;
+  fecha: string;
   category: string | null;
   image_url: string | null;
 };
@@ -43,11 +43,6 @@ export function HeroCarousel({ eventos }: { eventos: EventoDestacado[] }) {
   }
 
   const evento = eventos[indice];
-  const fecha = new Date(evento.starts_at).toLocaleDateString("es-CO", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-  });
 
   return (
     <div className="hero">
@@ -58,7 +53,7 @@ export function HeroCarousel({ eventos }: { eventos: EventoDestacado[] }) {
           {evento.category && <p className="event-card-eyebrow">{evento.category}</p>}
           <h1>{evento.name}</h1>
           <p>
-            {evento.venue} · {evento.city} · {fecha}
+            {evento.venue} · {evento.city} · {evento.fecha}
           </p>
           <Link href={`/eventos/${evento.id}`} className="btn btn-primary">
             Comprar boletos

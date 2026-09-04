@@ -15,7 +15,14 @@ export default async function HomePage() {
     .limit(24);
 
   const todos = eventos ?? [];
-  const destacados = todos.slice(0, 5);
+  const destacados = todos.slice(0, 5).map((e) => ({
+    ...e,
+    fecha: new Date(e.starts_at).toLocaleDateString("es-CO", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+    }),
+  }));
   const proximos = todos.slice(0, 8);
   const ciudades = Array.from(new Set(todos.map((e) => e.city))).sort();
 
