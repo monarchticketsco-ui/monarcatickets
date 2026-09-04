@@ -82,12 +82,11 @@ export function HeroCarousel({ eventos }: { eventos: EventoDestacado[] }) {
       <div className="hero-slide">
         <img
           ref={imgRef}
-          key={evento.id}
           src={evento.image_url || imagenDeEvento(evento.id, evento.category, 1400)}
           alt=""
         />
         <div className="hero-slide-scrim" />
-        <div className="hero-slide-content" ref={contentRef} key={`content-${evento.id}`}>
+        <div className="hero-slide-content" ref={contentRef}>
           {evento.category && <p className="event-card-eyebrow hero-fade">{evento.category}</p>}
           <h1 aria-label={evento.name}>
             {palabras.map((palabra, i) => (

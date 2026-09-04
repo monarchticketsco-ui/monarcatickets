@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { HeroCarousel } from "@/components/hero-carousel";
-import { PosterRow } from "@/components/poster-row";
 import { EventSearchBar } from "@/components/event-search-bar";
 import { Reveal } from "@/components/reveal";
 import { imagenDeEvento } from "@/lib/event-visuals";
@@ -68,7 +67,7 @@ export default async function HomePage() {
   }));
 
   const destacados = conFecha.slice(0, 6);
-  const recomendados = [...conFecha].sort((a, b) => hashString(a.id) - hashString(b.id)).slice(0, 10);
+  const recomendados = [...conFecha].sort((a, b) => hashString(a.id) - hashString(b.id)).slice(0, 4);
   const proximos = conFecha.slice(0, 8);
   const ciudades = Array.from(new Set(todos.map((e) => e.city))).sort();
 
@@ -97,8 +96,22 @@ export default async function HomePage() {
               </Link>
             </div>
             <p className="recomendados-note">Una selección variada, distinta de tus próximos eventos por fecha.</p>
+            <div className="recomendados-grid">
+              {recomendados.map((e) => (
+                <Link href={`/eventos/${e.id}`} key={e.id} className="recomendado-card">
+                  <img src={e.image_url || imagenDeEvento(e.id, e.category, 500)} alt="" />
+                  <span className="recomendado-badge">Recomendado</span>
+                  <div className="recomendado-body">
+                    {e.category && <p className="event-card-eyebrow">{e.category}</p>}
+                    <h3>{e.name}</h3>
+                    <p>
+                      {e.city} · {e.fecha}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </Reveal>
-          <PosterRow eventos={recomendados} />
         </div>
       )}
 
@@ -141,7 +154,8 @@ export default async function HomePage() {
         </Reveal>
       </div>
 
-      <div className="container-x">
+      <div className="category-band">
+        <div className="container-x">
         <Reveal>
           <div className="section-head">
             <h2>Explora por categoría</h2>
@@ -173,6 +187,7 @@ export default async function HomePage() {
             ))}
           </div>
         </Reveal>
+        </div>
       </div>
 
       <div className="blog-band">
