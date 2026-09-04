@@ -87,7 +87,6 @@ export function PosterRow({ eventos }: { eventos: EventoPoster[] }) {
             <img
               src={e.image_url || imagenDeEvento(e.id, e.category, 500)}
               alt=""
-              loading="lazy"
               decoding="async"
             />
             <div className="poster-scrim" />

@@ -99,7 +99,6 @@ export default async function HomePage() {
                   <img
                     src={e.image_url || imagenDeEvento(e.id, e.category, 500)}
                     alt=""
-                    loading="lazy"
                     decoding="async"
                   />
                   <span className="recomendado-badge">Recomendado</span>
@@ -137,7 +136,6 @@ export default async function HomePage() {
                       <img
                         src={e.image_url || imagenDeEvento(e.id, e.category, 500)}
                         alt=""
-                        loading="lazy"
                         decoding="async"
                       />
                       {e.category && <p className="event-card-eyebrow">{e.category}</p>}
