@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Chakra_Petch, Rajdhani } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
-import { CustomCursor } from "@/components/custom-cursor";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
@@ -28,7 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${chakraPetch.variable} ${rajdhani.variable}`}>
       <body>
-        <CustomCursor />
         <SiteHeader />
         {children}
         <SiteFooter />

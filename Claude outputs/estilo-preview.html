@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Monarca Tickets — Explorador de estilo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Manrope:wght@400;600;800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400;600;800&family=Chakra+Petch:wght@500;600;700&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  :root{
+    --bg:#070b16; --surface:#0d1326; --surface-2:#131a33; --surface-3:#1a2340;
+    --border:#1e2745; --border-soft:#161f3a;
+    --text:#f4f6fb; --muted:#8f9bbf; --muted-2:#5f6a8c;
+    --blue:#3b63f0; --green:#3ddc84;
+    --glow-green: rgba(61,220,132,.4); --glow-blue: rgba(59,99,240,.4);
+    --radius:14px; --radius-lg:22px;
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;}
+  html{color-scheme:dark;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Rajdhani',sans-serif; font-size:17px; line-height:1.5;
+    background-image:
+      radial-gradient(1100px 460px at 12% -10%, rgba(59,99,240,.16), transparent 60%),
+      radial-gradient(900px 420px at 100% 0%, rgba(61,220,132,.10), transparent 55%);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:48px 24px 96px;}
+  .top{max-width:70ch; margin-bottom:56px;}
+  .eyebrow{
+    color:var(--green); font-size:.72rem; font-weight:700; letter-spacing:.14em;
+    text-transform:uppercase; margin:0 0 12px;
+  }
+  h1.page-title{
+    font-family:'Orbitron',sans-serif; font-weight:900; font-size:clamp(1.8rem,1.3rem+2vw,2.5rem);
+    margin:0 0 14px; line-height:1.1;
+  }
+  .top p{color:var(--muted); font-size:1.05rem; margin:0;}
+  .top strong{color:var(--text);}
+  section.block{margin-bottom:72px;}
+  .block-head{display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px;}
+  .block-head h2{
+    font-family:'Orbitron',sans-serif; font-size:1.4rem; margin:0; color:var(--text);
+  }
+  .block-head .tag{
+    font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); border:1px solid var(--border); border-radius:999px; padding:5px 12px;
+  }
+
+  /* ---------- typography cards ---------- */
+  .type-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
+  @media (max-width:840px){ .type-grid{grid-template-columns:1fr;} }
+  .type-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:28px 26px; position:relative; overflow:hidden;
+  }
+  .type-card::before{
+    content:""; position:absolute; inset:0; opacity:.5; pointer-events:none;
+    background:radial-gradient(360px 160px at 100% 0%, rgba(61,220,132,.10), transparent 60%);
+  }
+  .type-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:8px; font-size:.75rem; font-weight:800;
+    background:linear-gradient(135deg,var(--blue),var(--green)); color:#04150c;
+    margin-bottom:14px;
+  }
+  .type-name{font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 18px;}
+  .type-sample-eyebrow{color:var(--green); font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin:0 0 8px;}
+  .type-sample-h1{margin:0 0 12px; line-height:1.08; font-size:clamp(1.5rem,1.1rem+1.4vw,2rem);}
+  .type-sample-p{color:var(--muted); margin:0 0 16px; max-width:46ch; font-size:1rem;}
+  .type-note{font-size:.86rem; color:var(--muted-2); border-top:1px solid var(--border-soft); padding-top:14px; margin:0;}
+
+  .t-a .type-sample-h1{font-family:'Unbounded',sans-serif; font-weight:800;}
+  .t-a .type-sample-p{font-family:'Manrope',sans-serif;}
+  .t-b .type-sample-h1{font-family:'Bricolage Grotesque',sans-serif; font-weight:800;}
+  .t-b .type-sample-p{font-family:'Plus Jakarta Sans',sans-serif;}
+  .t-c .type-sample-h1{font-family:'Chakra Petch',sans-serif; font-weight:700;}
+  .t-c .type-sample-p{font-family:'Rajdhani',sans-serif; font-size:1.05rem;}
+  .t-d .type-sample-h1{font-family:'Orbitron',sans-serif; font-weight:900;}
+  .t-d .type-sample-p{font-family:'Rajdhani',sans-serif; font-size:1.05rem;}
+
+  /* ---------- animation demos ---------- */
+  .anim-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
+  @media (max-width:840px){ .anim-grid{grid-template-columns:1fr;} }
+  .anim-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:22px 22px 24px; display:flex; flex-direction:column; gap:14px;
+  }
+  .anim-head{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .anim-title{margin:0; font-family:'Orbitron',sans-serif; font-size:1rem;}
+  .anim-desc{color:var(--muted); font-size:.9rem; margin:0; max-width:52ch;}
+  .replay-btn{
+    flex:0 0 auto; font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--text); background:var(--surface-2); border:1px solid var(--border); border-radius:999px;
+    padding:7px 14px; cursor:pointer; transition:border-color .2s var(--ease), color .2s var(--ease);
+  }
+  .replay-btn:hover{border-color:var(--green); color:var(--green);}
+
+  .demo-stage{
+    position:relative; height:230px; border-radius:var(--radius); overflow:hidden;
+    background:var(--surface-2); border:1px solid var(--border-soft);
+  }
+
+  /* Demo 1: cinematic scroll depth */
+  #demoScroll{overflow-y:auto; scrollbar-width:thin;}
+  .scroll-inner{position:relative; height:640px;}
+  .scroll-layer{position:absolute; left:0; right:0; will-change:transform;}
+  .scroll-layer.back{top:0; height:640px;
+    background:radial-gradient(320px 220px at 20% 20%, rgba(59,99,240,.35), transparent 65%),
+      radial-gradient(280px 220px at 85% 70%, rgba(61,220,132,.22), transparent 65%);
+  }
+  .scroll-layer.mid{top:40px; display:flex; flex-direction:column; gap:120px; align-items:center; padding-top:40px;}
+  .scroll-chip{
+    background:rgba(7,11,22,.7); border:1px solid var(--border); backdrop-filter:blur(6px);
+    border-radius:var(--radius); padding:14px 18px; font-size:.85rem; color:var(--text); width:78%;
+  }
+  .scroll-hint{
+    position:absolute; top:10px; right:14px; z-index:2; font-size:.68rem; color:var(--muted);
+    background:rgba(7,11,22,.6); border:1px solid var(--border); border-radius:999px; padding:4px 10px;
+    pointer-events:none;
+  }
+
+  /* Demo 2: tilt + magnetic */
+  #demoTilt{display:flex; align-items:center; justify-content:center; gap:22px; padding:18px;}
+  .tilt-card{
+    width:110px; height:150px; border-radius:12px; overflow:hidden; border:1px solid var(--border);
+    background:linear-gradient(150deg,var(--surface-3),var(--surface-2));
+    display:flex; align-items:flex-end; padding:10px; will-change:transform; transform-style:preserve-3d;
+    box-shadow:0 20px 40px -20px rgba(0,0,0,.6);
+  }
+  .tilt-card span{font-size:.72rem; color:var(--muted); font-weight:600;}
+  .magnet-wrap{width:130px; height:130px; display:flex; align-items:center; justify-content:center;}
+  .magnet-btn{
+    padding:12px 20px; border-radius:999px; border:none; cursor:pointer;
+    background:linear-gradient(90deg,var(--blue),var(--green)); color:#04150c; font-weight:800;
+    font-size:.85rem; will-change:transform;
+  }
+
+  /* Demo 3: kinetic text + icon + counter */
+  #demoKinetic{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:14px;}
+  .kinetic-heading{
+    font-family:'Orbitron',sans-serif; font-size:1.3rem; margin:0; display:flex; gap:.32em; flex-wrap:wrap; justify-content:center;
+  }
+  .kinetic-heading span{display:inline-block;}
+  .kinetic-row{display:flex; align-items:center; gap:22px;}
+  .kinetic-counter{font-family:'Orbitron',sans-serif; font-size:1.5rem; color:var(--green);}
+  .kinetic-counter-label{font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;}
+
+  /* Demo 4: combined */
+  #demoCombo{display:flex; align-items:center; justify-content:center; position:relative; padding:18px;}
+  .combo-card{
+    width:180px; height:190px; border-radius:14px; border:1px solid var(--border);
+    background:linear-gradient(160deg,var(--surface-3),var(--surface-2));
+    position:relative; will-change:transform; transform-style:preserve-3d;
+    box-shadow:0 24px 48px -20px rgba(0,0,0,.65);
+    display:flex; flex-direction:column; justify-content:flex-end; padding:14px; overflow:hidden;
+  }
+  .combo-badge{position:absolute; top:12px; left:12px; font-size:.62rem; padding:4px 8px; border-radius:999px; background:rgba(61,220,132,.16); color:var(--green); border:1px solid var(--glow-green);}
+  .combo-float{position:absolute; width:60px; height:60px; border-radius:50%; filter:blur(2px); pointer-events:none;}
+  .combo-float.blue{background:rgba(59,99,240,.35); top:-10px; right:-10px;}
+  .combo-float.green{background:rgba(61,220,132,.30); bottom:20px; left:-16px;}
+  .combo-title{font-size:.85rem; font-weight:700; margin:0;}
+  .combo-sub{font-size:.72rem; color:var(--muted); margin:2px 0 0;}
+
+  .footnote{
+    margin-top:64px; padding-top:24px; border-top:1px solid var(--border-soft);
+    color:var(--muted); font-size:.92rem;
+  }
+  .footnote strong{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <p class="eyebrow">Monarca Tickets · Vista previa de estilo</p>
+    <h1 class="page-title">Elige tipografía y animación antes de aplicar el cambio</h1>
+    <p>Cada tarjeta usa exactamente la paleta actual (azul <strong>#3b63f0</strong> · verde <strong>#3ddc84</strong> · navy <strong>#070b16</strong>). Las animaciones son interactivas — pasa el mouse, haz scroll dentro del recuadro o presiona "Reiniciar". Cuéntame en el chat cuál letra de cada bloque prefieres (ej. "tipografía A, animación combinado").</p>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Tipografía</h2>
+      <span class="tag">4 opciones</span>
+    </div>
+    <div class="type-grid">
+
+      <div class="type-card t-a">
+        <span class="type-badge">A</span>
+        <p class="type-name">Unbounded + Manrope</p>
+        <p class="type-sample-eyebrow">Acceso · Movimiento · Transformación</p>
+        <h3 class="type-sample-h1">Elige tu próxima experiencia</h3>
+        <p class="type-sample-p">Boletos para eventos en Colombia, con control de aforo real y pago seguro con Bold.</p>
+        <p class="type-note">Display redondeado y con carácter, muy de marca de entretenimiento. El mayor salto visual frente a lo actual.</p>
+      </div>
+
+      <div class="type-card t-b">
+        <span class="type-badge">B</span>
+        <p class="type-name">Bricolage Grotesque + Plus Jakarta Sans</p>
+        <p class="type-sample-eyebrow">Acceso · Movimiento · Transformación</p>
+        <h3 class="type-sample-h1">Elige tu próxima experiencia</h3>
+        <p class="type-sample-p">Boletos para eventos en Colombia, con control de aforo real y pago seguro con Bold.</p>
+        <p class="type-note">Display variable con look editorial 2025-2026. Se siente premium y contemporáneo, sin perder calidez.</p>
+      </div>
+
+      <div class="type-card t-c">
+        <span class="type-badge">C</span>
+        <p class="type-name">Chakra Petch + Rajdhani</p>
+        <p class="type-sample-eyebrow">Acceso · Movimiento · Transformación</p>
+        <h3 class="type-sample-h1">Elige tu próxima experiencia</h3>
+        <p class="type-sample-p">Boletos para eventos en Colombia, con control de aforo real y pago seguro con Bold.</p>
+        <p class="type-note">Evolución de lo actual: reemplaza solo Orbitron. Mantiene el espíritu tech pero más refinado, menos "gamer".</p>
+      </div>
+
+      <div class="type-card t-d">
+        <span class="type-badge">D</span>
+        <p class="type-name">Orbitron + Rajdhani (actual)</p>
+        <p class="type-sample-eyebrow">Acceso · Movimiento · Transformación</p>
+        <h3 class="type-sample-h1">Elige tu próxima experiencia</h3>
+        <p class="type-sample-p">Boletos para eventos en Colombia, con control de aforo real y pago seguro con Bold.</p>
+        <p class="type-note">Sin cambios — se conserva la identidad tipográfica de hoy tal cual.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Animación</h2>
+      <span class="tag">4 opciones interactivas</span>
+    </div>
+    <div class="anim-grid">
+
+      <div class="anim-card">
+        <div class="anim-head">
+          <h3 class="anim-title">A · Cinemático — scroll con profundidad</h3>
+        </div>
+        <p class="anim-desc">Capas que se mueven a distinta velocidad al hacer scroll. Efecto editorial/premium para secciones grandes (hero, categorías, blog).</p>
+        <div class="demo-stage" id="demoScroll">
+          <span class="scroll-hint">Scroll aquí ↓</span>
+          <div class="scroll-inner">
+            <div class="scroll-layer back"></div>
+            <div class="scroll-layer mid">
+              <div class="scroll-chip">Concierto · Bogotá</div>
+              <div class="scroll-chip">Festival · Medellín</div>
+              <div class="scroll-chip">Deportivo · Cali</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anim-card">
+        <div class="anim-head">
+          <h3 class="anim-title">B · Interactivo 3D — tilt y magnetismo</h3>
+        </div>
+        <p class="anim-desc">Tarjetas con inclinación 3D al mover el mouse (como los posters actuales) y botones magnéticos que siguen el cursor.</p>
+        <div class="demo-stage" id="demoTilt">
+          <div class="tilt-card" id="tiltCard"><span>Mueve el mouse</span></div>
+          <div class="magnet-wrap" id="magnetWrap">
+            <button class="magnet-btn" id="magnetBtn">Comprar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="anim-card">
+        <div class="anim-head">
+          <h3 class="anim-title">C · Micro-animaciones cinéticas</h3>
+          <button class="replay-btn" data-replay="kinetic">Reiniciar</button>
+        </div>
+        <p class="anim-desc">Títulos que se arman palabra por palabra, íconos que se dibujan y contadores animados. Sutil y muy pulido.</p>
+        <div class="demo-stage" id="demoKinetic">
+          <h3 class="kinetic-heading" id="kineticHeading">
+            <span>Vive</span><span>el</span><span>momento</span>
+          </h3>
+          <div class="kinetic-row">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" id="kineticIcon">
+              <path d="M3 10a2 2 0 0 0 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3Z" stroke="#3ddc84" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="70" stroke-dashoffset="70"/>
+              <path d="M10 5v14" stroke="#3ddc84" stroke-width="1.6" stroke-dasharray="4 4" stroke-dashoffset="18"/>
+            </svg>
+            <div>
+              <div class="kinetic-counter" id="kineticCounter">0</div>
+              <div class="kinetic-counter-label">boletos hoy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anim-card">
+        <div class="anim-head">
+          <h3 class="anim-title">D · Combinado (recomendado)</h3>
+          <button class="replay-btn" data-replay="combo">Reiniciar</button>
+        </div>
+        <p class="anim-desc">Scroll-reveal con profundidad en secciones grandes, tilt/magnetismo en tarjetas y micro-animación solo en títulos. Un poco de cada una.</p>
+        <div class="demo-stage" id="demoCombo">
+          <div class="combo-card" id="comboCard">
+            <div class="combo-float blue"></div>
+            <div class="combo-float green"></div>
+            <span class="combo-badge">Recomendado</span>
+            <p class="combo-title" id="comboTitle">Noche de Stand Up</p>
+            <p class="combo-sub">Bogotá · vie 25 sep</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <p class="footnote">Responde con algo como <strong>"tipografía A, animación D"</strong> (o mezcla lo que te guste de cada una) y aplico el cambio en el sitio real.</p>
+
+</div>
+
+<script>
+(function(){
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- Demo A: scroll depth ----------
+  var stage = document.getElementById("demoScroll");
+  var back = stage.querySelector(".back");
+  var mid = stage.querySelector(".mid");
+  stage.addEventListener("scroll", function(){
+    var st = stage.scrollTop;
+    back.style.transform = "translateY(" + (st * 0.25) + "px)";
+    mid.style.transform = "translateY(" + (-st * 0.15) + "px)";
+  });
+
+  // ---------- Demo B: tilt + magnetic ----------
+  var tiltStage = document.getElementById("demoTilt");
+  var tiltCard = document.getElementById("tiltCard");
+  if (!reduced) {
+    tiltStage.addEventListener("mousemove", function(e){
+      var r = tiltCard.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width - 0.5;
+      var py = (e.clientY - r.top) / r.height - 0.5;
+      var inside = e.clientX >= r.left - 40 && e.clientX <= r.right + 40 && e.clientY >= r.top - 40 && e.clientY <= r.bottom + 40;
+      if (inside) {
+        gsap.to(tiltCard, { rotateY: px * 22, rotateX: py * -22, transformPerspective: 500, duration: .4, ease: "power2.out" });
+      }
+    });
+    tiltStage.addEventListener("mouseleave", function(){
+      gsap.to(tiltCard, { rotateY: 0, rotateX: 0, duration: .6, ease: "power3.out" });
+    });
+  }
+  var magnetWrap = document.getElementById("magnetWrap");
+  var magnetBtn = document.getElementById("magnetBtn");
+  if (!reduced) {
+    magnetWrap.addEventListener("mousemove", function(e){
+      var r = magnetWrap.getBoundingClientRect();
+      var x = (e.clientX - r.left - r.width/2) * 0.4;
+      var y = (e.clientY - r.top - r.height/2) * 0.4;
+      gsap.to(magnetBtn, { x: x, y: y, duration: .3, ease: "power2.out" });
+    });
+    magnetWrap.addEventListener("mouseleave", function(){
+      gsap.to(magnetBtn, { x: 0, y: 0, duration: .5, ease: "elastic.out(1, 0.4)" });
+    });
+  }
+
+  // ---------- Demo C: kinetic ----------
+  function playKinetic(){
+    var words = document.querySelectorAll("#kineticHeading span");
+    var icon = document.getElementById("kineticIcon");
+    var counter = { v: 0 };
+    var counterEl = document.getElementById("kineticCounter");
+    if (reduced) { counterEl.textContent = "1284"; return; }
+    gsap.fromTo(words, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .5, stagger: .08, ease: "power3.out" });
+    gsap.fromTo(icon.querySelectorAll("path"), { strokeDashoffset: 70 }, { strokeDashoffset: 0, duration: 1, ease: "power2.inOut" });
+    gsap.to(counter, { v: 1284, duration: 1.4, ease: "power2.out", onUpdate: function(){ counterEl.textContent = Math.round(counter.v); } });
+  }
+  playKinetic();
+  document.querySelector('[data-replay="kinetic"]').addEventListener("click", playKinetic);
+
+  // ---------- Demo D: combined ----------
+  var comboStage = document.getElementById("demoCombo");
+  var comboCard = document.getElementById("comboCard");
+  if (!reduced) {
+    comboStage.addEventListener("mousemove", function(e){
+      var r = comboCard.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width - 0.5;
+      var py = (e.clientY - r.top) / r.height - 0.5;
+      gsap.to(comboCard, { rotateY: px * 14, rotateX: py * -14, transformPerspective: 600, duration: .4, ease: "power2.out" });
+      gsap.to(comboStage.querySelectorAll(".combo-float"), { x: -px * 18, y: -py * 18, duration: .6, ease: "power2.out" });
+    });
+    comboStage.addEventListener("mouseleave", function(){
+      gsap.to(comboCard, { rotateY: 0, rotateX: 0, duration: .6, ease: "power3.out" });
+    });
+  }
+  function playCombo(){
+    if (reduced) return;
+    gsap.fromTo(comboCard, { opacity: 0, y: 24, scale: .94 }, { opacity: 1, y: 0, scale: 1, duration: .6, ease: "power3.out" });
+    gsap.fromTo("#comboTitle", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: .5, delay: .15, ease: "power2.out" });
+  }
+  playCombo();
+  document.querySelector('[data-replay="combo"]').addEventListener("click", playCombo);
+})();
+</script>
+</body>
+</html>

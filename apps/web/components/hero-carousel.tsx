@@ -57,9 +57,6 @@ export function HeroCarousel({ eventos }: { eventos: EventoDestacado[] }) {
     return (
       <div className="hero">
         <div className="hero-empty">
-          <p className="event-card-eyebrow" style={{ marginBottom: 12 }}>
-            Acceso · Movimiento · Transformación
-          </p>
           <h1>El ticket que se transforma en experiencia.</h1>
           <p className="page-lede" style={{ marginBottom: 20 }}>
             Boletos para eventos en Colombia, con control de aforo real y pago seguro con Bold.

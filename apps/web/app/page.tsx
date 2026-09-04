@@ -74,9 +74,6 @@ export default async function HomePage() {
   return (
     <main className="home-sections">
       <div className="container-x">
-        <Reveal className="home-eyebrow-block" depth={false} y={16}>
-          <p className="event-card-eyebrow">Acceso · Movimiento · Transformación</p>
-        </Reveal>
         <EventSearchBar ciudades={ciudades} />
       </div>
 
