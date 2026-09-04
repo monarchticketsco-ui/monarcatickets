@@ -23,14 +23,17 @@ export async function SiteHeader() {
     <header className="site-header">
       <div className="site-header-inner">
         <Link href="/" className="brand" aria-label="Monarca Tickets — inicio">
-          <Image src="/logo.png" alt="Monarca Tickets" width={209} height={44} priority />
+          <Image src="/logo.png" alt="Monarca Tickets" width={152} height={32} priority />
         </Link>
         <Link href="/" className="brand-icon" aria-label="Monarca Tickets — inicio">
-          <Image src="/logo-icon.png" alt="" width={62} height={40} priority />
+          <Image src="/logo-icon.png" alt="" width={44} height={28} priority />
         </Link>
         <MobileNavToggle>
           <Link href="/eventos" className="nav-link">
             Eventos
+          </Link>
+          <Link href="/soporte" className="nav-link">
+            Soporte
           </Link>
           {user ? (
             <>
@@ -55,11 +58,11 @@ export async function SiteHeader() {
             </>
           ) : (
             <>
-              <Link href="/login" className="nav-link">
-                Ingresar
+              <Link href="/empresas" className="nav-link">
+                Portal empresas
               </Link>
-              <Link href="/signup" className="btn btn-primary btn-sm">
-                Crear cuenta
+              <Link href="/personas" className="btn btn-primary btn-sm">
+                Portal personas
               </Link>
             </>
           )}

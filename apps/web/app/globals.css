@@ -1,5 +1,5 @@
 /* Monarca Tickets — sistema de diseno
-   Paleta y tipografia tomadas del manual de marca (Orbitron + Rajdhani,
+   Paleta y tipografia tomadas del manual de marca (Chakra Petch + Rajdhani,
    navy #070b16 con gradiente azul -> verde). La marca es deliberadamente
    oscura en todas sus piezas (app, tickets digitales, pulsera VIP), asi
    que el sitio no tiene modo claro — es una identidad, no una preferencia
@@ -36,7 +36,7 @@
   --radius-sm: 8px;
   --radius-lg: 20px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --font-heading: var(--font-orbitron), "Segoe UI", sans-serif;
+  --font-heading: var(--font-chakra-petch), "Segoe UI", sans-serif;
   --font-body: var(--font-rajdhani), "Segoe UI", sans-serif;
 }
 
@@ -166,7 +166,7 @@ main.container {
 }
 
 .brand img {
-  height: 44px;
+  height: 32px;
   width: auto;
   display: block;
   filter: drop-shadow(0 0 18px rgba(61, 220, 132, 0.18));
@@ -179,7 +179,7 @@ main.container {
 }
 
 .brand-icon img {
-  height: 40px;
+  height: 28px;
   width: auto;
   display: block;
   filter: drop-shadow(0 0 16px rgba(61, 220, 132, 0.35));
@@ -931,7 +931,7 @@ tbody tr:hover {
 .search-bar {
   position: relative;
   z-index: 2;
-  margin: 8px 0 44px;
+  margin: 0 0 4px;
   background: linear-gradient(180deg, rgba(61, 220, 132, 0.12), rgba(19, 26, 51, 0.72));
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
@@ -964,15 +964,9 @@ tbody tr:hover {
   border-color: var(--green);
 }
 
-@media (min-width: 720px) {
-  .search-bar {
-    margin: -30px 0 48px;
-  }
-}
-
 @media (max-width: 640px) {
   .search-bar {
-    margin: 4px 0 32px;
+    margin: 0 0 4px;
     padding: 14px;
   }
 
@@ -1481,4 +1475,307 @@ body.cursor-hover .cursor-ring {
 body.cursor-down .cursor-ring {
   width: 28px;
   height: 28px;
+}
+
+/* ---------- inicio: layout en secciones (permite bandas full-bleed) ---------- */
+
+.home-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  padding: 28px 0 76px;
+}
+
+@media (max-width: 640px) {
+  .home-sections {
+    gap: 44px;
+    padding: 16px 0 56px;
+  }
+}
+
+.container-x {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (min-width: 1400px) {
+  .container-x {
+    padding: 0 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container-x {
+    padding: 0 16px;
+  }
+}
+
+.home-eyebrow-block {
+  max-width: 62ch;
+  margin: 0 0 4px;
+}
+
+.home-eyebrow-block h1 {
+  margin: 6px 0 8px;
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+}
+
+/* ---------- inicio: categorias ---------- */
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 880px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.category-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  padding: 18px;
+  transition: border-color 0.25s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.category-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease);
+  z-index: 0;
+}
+
+.category-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(0deg, rgba(5, 8, 17, 0.92) 0%, rgba(5, 8, 17, 0.35) 55%, rgba(5, 8, 17, 0.1) 100%);
+}
+
+.category-tile:hover {
+  border-color: var(--green-soft);
+  transform: translateY(-4px);
+  box-shadow: 0 26px 48px -22px rgba(0, 0, 0, 0.65), 0 0 40px -18px var(--glow-green);
+}
+
+.category-tile:hover img {
+  transform: scale(1.08);
+}
+
+.category-tile-icon,
+.category-tile h3 {
+  position: relative;
+  z-index: 2;
+}
+
+.category-tile-icon {
+  color: var(--green);
+  margin-bottom: 2px;
+}
+
+.category-tile h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 640px) {
+  .category-tile {
+    padding: 14px;
+  }
+
+  .category-tile h3 {
+    font-size: 0.95rem;
+  }
+}
+
+/* ---------- inicio: recomendados ---------- */
+
+.recomendados-note {
+  color: var(--muted);
+  margin: -4px 0 0;
+  max-width: 60ch;
+}
+
+/* ---------- inicio: blog (banda full-bleed) ---------- */
+
+.blog-band {
+  position: relative;
+  width: 100%;
+  padding: 52px 0 60px;
+  background: linear-gradient(155deg, #0c1533 0%, #0a1a2c 45%, #081226 100%);
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  overflow: hidden;
+}
+
+.blog-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(720px 320px at 8% 0%, rgba(59, 99, 240, 0.24), transparent 60%),
+    radial-gradient(640px 300px at 100% 100%, rgba(61, 220, 132, 0.14), transparent 60%);
+}
+
+.blog-band .section-head,
+.blog-band .container-x {
+  position: relative;
+  z-index: 1;
+}
+
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+  list-style: none;
+  padding: 0;
+}
+
+.blog-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(13, 19, 38, 0.6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--text);
+  backdrop-filter: blur(6px);
+  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.blog-card:hover {
+  border-color: var(--green-soft);
+  transform: translateY(-4px);
+  box-shadow: 0 24px 44px -22px rgba(0, 0, 0, 0.6), 0 0 32px -18px var(--glow-green);
+}
+
+.blog-card-media {
+  aspect-ratio: 16 / 10;
+  background: var(--surface-2);
+}
+
+.blog-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.blog-card-body {
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.blog-card-tag {
+  color: var(--green);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.blog-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.blog-card p {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.blog-card-meta {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 0.76rem;
+  color: var(--muted-2);
+}
+
+/* ---------- portales (empresas / personas) ---------- */
+
+.portal-hero {
+  padding: 56px 0 8px;
+  max-width: 68ch;
+}
+
+.portal-hero .event-card-eyebrow {
+  margin-bottom: 12px;
+}
+
+.portal-benefits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 36px 0 40px;
+}
+
+@media (max-width: 780px) {
+  .portal-benefits {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-benefit-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 20px 22px;
+}
+
+.portal-benefit-card h3 {
+  margin: 10px 0 6px;
+  font-size: 1rem;
+}
+
+.portal-benefit-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.portal-benefit-icon {
+  color: var(--green);
+}
+
+.portal-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+}
+
+/* ---------- boton magnetico ---------- */
+
+.magnetic-btn {
+  display: inline-flex;
+  will-change: transform;
+}
+
+.hero-word {
+  display: inline-block;
+  will-change: transform, filter, opacity;
 }

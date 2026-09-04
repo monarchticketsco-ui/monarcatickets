@@ -1,4 +1,5 @@
 import { CATEGORIAS } from "@/lib/event-visuals";
+import { MagneticButton } from "@/components/magnetic-button";
 
 export function EventSearchBar({
   ciudades,
@@ -45,9 +46,11 @@ export function EventSearchBar({
           ))}
         </select>
       </div>
-      <button type="submit" className="btn btn-primary">
-        Buscar
-      </button>
+      <MagneticButton>
+        <button type="submit" className="btn btn-primary">
+          Buscar
+        </button>
+      </MagneticButton>
     </form>
   );
 }

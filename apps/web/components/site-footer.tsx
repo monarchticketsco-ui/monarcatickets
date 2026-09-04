@@ -66,7 +66,10 @@ export function SiteFooter() {
               <Link href="/pqrs">PQRS</Link>
             </li>
             <li>
-              <Link href="/signup">Venda su evento</Link>
+              <Link href="/empresas">Venda su evento</Link>
+            </li>
+            <li>
+              <Link href="/personas">Compre boletos</Link>
             </li>
             <li>
               <Link href="/preguntas-frecuentes">Preguntas frecuentes</Link>
