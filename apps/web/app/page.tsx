@@ -85,7 +85,7 @@ export default async function HomePage() {
 
       {recomendados.length > 0 && (
         <div className="container-x">
-          <Reveal>
+          <Reveal depth={false}>
             <div className="section-head">
               <h2>Recomendados para ti</h2>
               <Link href="/eventos" className="nav-link">
@@ -117,7 +117,7 @@ export default async function HomePage() {
       )}
 
       <div className="container-x">
-        <Reveal>
+        <Reveal depth={false}>
           <div className="section-head">
             <h2>Próximos eventos</h2>
             <Link href="/eventos" className="nav-link">
@@ -161,7 +161,7 @@ export default async function HomePage() {
 
       <div className="category-band">
         <div className="container-x">
-        <Reveal>
+        <Reveal depth={false}>
           <div className="section-head">
             <h2>Explora por categoría</h2>
           </div>
@@ -197,7 +197,7 @@ export default async function HomePage() {
 
       <div className="blog-band">
         <div className="container-x">
-          <Reveal>
+          <Reveal depth={false}>
             <div className="section-head">
               <h2>Desde el blog</h2>
               <Link href="/blog" className="nav-link">
