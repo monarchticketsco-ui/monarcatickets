@@ -942,7 +942,7 @@ tbody tr:hover {
   margin: 0 0 4px;
   background: linear-gradient(120deg, #4bec9a, #22b46a 65%, #1a9a5a);
   border: 1px solid rgba(6, 20, 13, 0.25);
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   padding: 10px 10px 10px 22px;
   box-shadow: 0 24px 48px -20px rgba(4, 18, 12, 0.65), 0 1px 0 rgba(255, 255, 255, 0.25) inset,
     0 0 40px -18px var(--glow-green);
