@@ -104,7 +104,7 @@ p {
 /* ---------- layout ---------- */
 
 .container {
-  max-width: 1160px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 0 20px 64px;
 }
@@ -142,7 +142,7 @@ main.container {
 }
 
 .site-header-inner {
-  max-width: 1160px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 14px 20px;
   display: flex;
@@ -981,7 +981,7 @@ tbody tr:hover {
   display: grid;
   grid-template-columns: repeat(4, minmax(160px, 1fr));
   gap: 32px;
-  max-width: 1160px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 56px 20px 36px;
 }
@@ -1247,4 +1247,16 @@ tbody tr:hover {
 
 .text-link:hover {
   color: var(--text);
+}
+
+/* En pantallas grandes, el contenedor ahora es mucho mas ancho (ocupa
+   casi todo el viewport); se le da mas aire a los bordes para que no
+   se vea pegado al borde de la ventana. */
+@media (min-width: 1400px) {
+  .container,
+  .site-header-inner,
+  .site-footer-grid {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
 }
