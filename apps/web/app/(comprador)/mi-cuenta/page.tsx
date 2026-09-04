@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { actualizarPerfil } from "./actions";
@@ -158,8 +159,9 @@ export default async function MiCuentaPage({
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
                       {items.flatMap((item) =>
                         item.tickets.map((ticket, i) => (
-                          <div
+                          <Link
                             key={ticket.id}
+                            href={`/mi-cuenta/boleto/${ticket.id}`}
                             style={{
                               width: 180,
                               background: "var(--surface-2)",
@@ -167,6 +169,9 @@ export default async function MiCuentaPage({
                               borderRadius: "var(--radius)",
                               padding: 12,
                               textAlign: "center",
+                              display: "block",
+                              textDecoration: "none",
+                              color: "inherit",
                             }}
                           >
                             {qrPorBoleto.get(ticket.id) && (
@@ -188,7 +193,10 @@ export default async function MiCuentaPage({
                             >
                               {TICKET_ESTADO_LABEL[ticket.status] ?? ticket.status}
                             </span>
-                          </div>
+                            <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "var(--green)" }}>
+                              Ver / descargar →
+                            </p>
+                          </Link>
                         ))
                       )}
                     </div>
