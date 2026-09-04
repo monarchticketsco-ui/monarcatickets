@@ -20,7 +20,7 @@ export function MobileNavToggle({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <>
+    <div className="nav-wrap">
       <button
         type="button"
         className={`nav-toggle${open ? " nav-toggle-open" : ""}`}
@@ -35,6 +35,6 @@ export function MobileNavToggle({ children }: { children: React.ReactNode }) {
       <nav className={`site-nav${open ? " site-nav-open" : ""}`} onClick={() => setOpen(false)}>
         {children}
       </nav>
-    </>
+    </div>
   );
 }

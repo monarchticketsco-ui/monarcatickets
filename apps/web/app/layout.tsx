@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Orbitron, Rajdhani } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { CustomCursor } from "@/components/custom-cursor";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${orbitron.variable} ${rajdhani.variable}`}>
       <body>
+        <CustomCursor />
         <SiteHeader />
         {children}
         <SiteFooter />

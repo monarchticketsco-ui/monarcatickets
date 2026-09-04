@@ -23,7 +23,10 @@ export async function SiteHeader() {
     <header className="site-header">
       <div className="site-header-inner">
         <Link href="/" className="brand" aria-label="Monarca Tickets — inicio">
-          <Image src="/logo.png" alt="Monarca Tickets" width={210} height={64} priority />
+          <Image src="/logo.png" alt="Monarca Tickets" width={209} height={44} priority />
+        </Link>
+        <Link href="/" className="brand-icon" aria-label="Monarca Tickets — inicio">
+          <Image src="/logo-icon.png" alt="" width={62} height={40} priority />
         </Link>
         <MobileNavToggle>
           <Link href="/eventos" className="nav-link">
