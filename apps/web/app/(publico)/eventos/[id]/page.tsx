@@ -200,11 +200,11 @@ export default async function EventoPublicoPage({
       </p>
       <p className="muted">
         Consulta las{" "}
-        <a href="/legal/condiciones" className="nav-link" style={{ display: "inline" }}>
+        <a href="/legal/condiciones" className="text-link">
           condiciones generales, politica de privacidad y seguridad
         </a>{" "}
         y la{" "}
-        <a href="/legal/cancelaciones" className="nav-link" style={{ display: "inline" }}>
+        <a href="/legal/cancelaciones" className="text-link">
           politica de cancelaciones y cambios
         </a>{" "}
         de Monarca Tickets.
