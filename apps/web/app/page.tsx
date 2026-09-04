@@ -96,7 +96,12 @@ export default async function HomePage() {
             <div className="recomendados-grid">
               {recomendados.map((e) => (
                 <Link href={`/eventos/${e.id}`} key={e.id} className="recomendado-card">
-                  <img src={e.image_url || imagenDeEvento(e.id, e.category, 500)} alt="" />
+                  <img
+                    src={e.image_url || imagenDeEvento(e.id, e.category, 500)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <span className="recomendado-badge">Recomendado</span>
                   <div className="recomendado-body">
                     {e.category && <p className="event-card-eyebrow">{e.category}</p>}
@@ -129,7 +134,12 @@ export default async function HomePage() {
                 <li key={e.id}>
                   <Link href={`/eventos/${e.id}`} className="event-card">
                     <div className="event-card-media">
-                      <img src={e.image_url || imagenDeEvento(e.id, e.category, 500)} alt="" />
+                      <img
+                        src={e.image_url || imagenDeEvento(e.id, e.category, 500)}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
                       {e.category && <p className="event-card-eyebrow">{e.category}</p>}
                     </div>
                     <div className="event-card-body">

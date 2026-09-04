@@ -84,7 +84,12 @@ export function PosterRow({ eventos }: { eventos: EventoPoster[] }) {
       <div className="poster-row" ref={rowRef}>
         {eventos.map((e) => (
           <Link href={`/eventos/${e.id}`} key={e.id} className="poster-card">
-            <img src={e.image_url || imagenDeEvento(e.id, e.category, 500)} alt="" />
+            <img
+              src={e.image_url || imagenDeEvento(e.id, e.category, 500)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
             <div className="poster-scrim" />
             <div className="poster-body">
               {e.category && <p className="event-card-eyebrow">{e.category}</p>}
