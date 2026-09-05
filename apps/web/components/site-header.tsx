@@ -47,7 +47,7 @@ export async function SiteHeader() {
               )}
               {role === "admin" && (
                 <Link href="/crm" className="nav-link">
-                  CRM
+                  Panel
                 </Link>
               )}
               <form action="/logout" method="post">

@@ -21,7 +21,8 @@ export function BoletoView({
   evento,
   tipoBoleto,
   precio,
-  titular,
+  holderName,
+  holderDocument,
   estado,
   serial,
   qrDataUrl,
@@ -30,12 +31,14 @@ export function BoletoView({
   evento: { name: string; venue: string; city: string; starts_at: string } | null;
   tipoBoleto: string;
   precio: number;
-  titular: string;
+  holderName: string | null;
+  holderDocument: string | null;
   estado: string;
   serial: string;
   qrDataUrl: string;
   ordenId: string;
 }) {
+  const sinTitular = !holderName || !holderDocument;
   const passRef = useRef<HTMLDivElement>(null);
   const [descargando, setDescargando] = useState(false);
   const [errorDescarga, setErrorDescarga] = useState(false);
@@ -117,7 +120,12 @@ export function BoletoView({
         <div className="ticket-pass-footer">
           <div>
             <span className="ticket-pass-footer-label">Titular</span>
-            <span className="ticket-pass-footer-value">{titular}</span>
+            <span className="ticket-pass-footer-value">{holderName || "Sin asignar"}</span>
+            {holderDocument && (
+              <span className="ticket-pass-footer-value" style={{ display: "block", fontWeight: 400, fontSize: "0.85rem" }}>
+                CC {holderDocument}
+              </span>
+            )}
           </div>
           <div style={{ textAlign: "right" }}>
             <span className="ticket-pass-footer-label">Valor</span>
@@ -128,22 +136,32 @@ export function BoletoView({
         <p className="ticket-pass-order">Orden #{ordenId.split("-")[0].toUpperCase()} · Monarca Tickets</p>
       </div>
 
-      <div className="boleto-actions">
-        <button type="button" className="btn btn-primary" onClick={descargar} disabled={descargando}>
-          {descargando ? "Generando…" : "Descargar boleto"}
-        </button>
-        <button type="button" className="btn" onClick={() => window.print()}>
-          Imprimir
-        </button>
-      </div>
-      {errorDescarga && (
+      {sinTitular ? (
         <p role="alert" className="muted boleto-hint">
-          No se pudo generar la imagen. Intenta de nuevo o usa "Imprimir → Guardar como PDF".
+          Este boleto no tiene un titular (nombre y cedula) asignado, asi que no se puede descargar ni imprimir
+          todavia por seguridad. Si compraste antes de que se activara esta funcion, escribenos a soporte para
+          que te ayudemos a asignarlo.
         </p>
+      ) : (
+        <>
+          <div className="boleto-actions">
+            <button type="button" className="btn btn-primary" onClick={descargar} disabled={descargando}>
+              {descargando ? "Generando…" : "Descargar boleto"}
+            </button>
+            <button type="button" className="btn" onClick={() => window.print()}>
+              Imprimir
+            </button>
+          </div>
+          {errorDescarga && (
+            <p role="alert" className="muted boleto-hint">
+              No se pudo generar la imagen. Intenta de nuevo o usa "Imprimir → Guardar como PDF".
+            </p>
+          )}
+          <p className="muted boleto-hint">
+            Guarda esta imagen en tu celular o imprimela — el codigo QR es lo unico que te piden en la entrada.
+          </p>
+        </>
       )}
-      <p className="muted boleto-hint">
-        Guarda esta imagen en tu celular o imprimela — el codigo QR es lo unico que te piden en la entrada.
-      </p>
     </div>
   );
 }

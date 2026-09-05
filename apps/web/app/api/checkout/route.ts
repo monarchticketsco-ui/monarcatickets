@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { crearLinkDePago, BoldError } from "@/lib/bold";
+import { validarAsistentes } from "@/lib/asistentes";
 
 // Paso 2 del flujo de pago (blueprint Fig. 3):
 // recibe { ticketTypeId, quantity }, valida contra el cupo disponible,
@@ -30,6 +31,13 @@ export async function POST(req: NextRequest) {
     quantity > 10
   ) {
     return NextResponse.json({ error: "datos_invalidos" }, { status: 400 });
+  }
+
+  // Boletos nominativos: cada unidad comprada necesita su asistente
+  // (nombre + cedula) desde antes de pagar -- ver lib/asistentes.ts.
+  const asistentesResult = validarAsistentes(body?.asistentes, quantity);
+  if (!asistentesResult.ok) {
+    return NextResponse.json({ error: "asistentes_invalidos", detalle: asistentesResult.error }, { status: 400 });
   }
 
   const { data: tipo } = await supabase
@@ -74,6 +82,7 @@ export async function POST(req: NextRequest) {
     ticket_type_id: ticketTypeId,
     quantity,
     unit_price_cop: tipo.price_cop,
+    asistentes: asistentesResult.asistentes,
   });
 
   if (itemError) {

@@ -36,7 +36,7 @@ type OrdenConTickets = {
     quantity: number;
     unit_price_cop: number;
     ticket_types: { name: string } | null;
-    tickets: { id: string; qr_signed: string; status: string }[];
+    tickets: { id: string; qr_signed: string; status: string; holder_name: string | null; holder_document: string | null }[];
   }[];
 };
 
@@ -62,7 +62,7 @@ export default async function MiCuentaPage({
   const { data: ordenesData } = await supabase
     .from("orders")
     .select(
-      "id, total_cop, status, created_at, events(name, venue, city, starts_at), order_items(id, quantity, unit_price_cop, ticket_types(name), tickets(id, qr_signed, status))"
+      "id, total_cop, status, created_at, events(name, venue, city, starts_at), order_items(id, quantity, unit_price_cop, ticket_types(name), tickets(id, qr_signed, status, holder_name, holder_document))"
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
@@ -186,6 +186,9 @@ export default async function MiCuentaPage({
                             )}
                             <p style={{ margin: "0 0 2px", fontSize: "0.8rem", fontWeight: 700 }}>
                               {item.ticket_types?.name ?? "Boleto"} #{i + 1}
+                            </p>
+                            <p style={{ margin: "0 0 6px", fontSize: "0.72rem", color: "var(--muted)" }}>
+                              {ticket.holder_name || "Sin titular asignado"}
                             </p>
                             <span
                               className={ticket.status === "valido" ? "badge badge-green" : "badge"}

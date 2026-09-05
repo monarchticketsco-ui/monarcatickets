@@ -91,6 +91,8 @@ Usa `tipos_de_boleto[].id` como `ticket_type_id` al crear la orden.
 
 Crea una orden y devuelve el link de pago de Bold. El comprador **no necesita cuenta previa en el sitio** — si el correo no existe, se le crea un perfil automáticamente (así podría, si quisiera, entrar luego a monarcatickets con ese correo). El aforo se reserva de forma atómica: si dos personas compran el último boleto al mismo tiempo, solo una gana la reserva.
 
+**Boletos nominativos:** cada boleto va asociado a la persona que lo va a usar. Por eso `asistentes` es obligatorio y debe traer **exactamente un elemento por cada unidad de `cantidad`**, cada uno con `nombre` (mínimo 3 caracteres) y `documento` (cédula, solo números, 5 a 15 dígitos). Esto es aparte de `comprador`, que es quien paga — pueden ser la misma persona o no.
+
 ```bash
 curl -X POST "https://monarcatickets-web.vercel.app/api/v1/ordenes" \
   -H "x-api-key: TU_API_KEY" \
@@ -102,9 +104,15 @@ curl -X POST "https://monarcatickets-web.vercel.app/api/v1/ordenes" \
       "nombre": "Juan Pérez",
       "correo": "juan@correo.com",
       "telefono": "3001234567"
-    }
+    },
+    "asistentes": [
+      { "nombre": "Juan Pérez", "documento": "1020304050" },
+      { "nombre": "María Gómez", "documento": "1030405060" }
+    ]
   }'
 ```
+
+Errores propios de este campo: `400 asistentes_invalidos` (falta algún asistente, no coincide la cantidad, o un nombre/documento no es válido — viene `detalle` con el motivo exacto).
 
 Respuesta (`200`):
 

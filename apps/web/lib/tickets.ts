@@ -42,6 +42,8 @@ export function verificarFirmaTicket(qrSigned: string): { valido: boolean; ticke
  * del webhook de Bold que de algun modo llego hasta aca) no vuelve a
  * generarlos para ese item.
  */
+type Asistente = { nombre?: string; documento?: string };
+
 export async function generarBoletosParaOrden(
   admin: SupabaseClient,
   ordenId: string,
@@ -49,7 +51,7 @@ export async function generarBoletosParaOrden(
 ): Promise<{ id: string; order_item_id: string; qr_signed: string }[]> {
   const { data: items, error: itemsError } = await admin
     .from("order_items")
-    .select("id, quantity")
+    .select("id, quantity, asistentes")
     .eq("order_id", ordenId);
 
   if (itemsError) throw itemsError;
@@ -64,17 +66,31 @@ export async function generarBoletosParaOrden(
   if (existentesError) throw existentesError;
   const itemsConBoletos = new Set((existentes ?? []).map((t) => t.order_item_id as string));
 
-  const filas: { id: string; order_item_id: string; qr_signed: string; holder_user_id: string }[] = [];
+  const filas: {
+    id: string;
+    order_item_id: string;
+    qr_signed: string;
+    holder_user_id: string;
+    holder_name: string | null;
+    holder_document: string | null;
+  }[] = [];
   for (const item of items) {
     if (itemsConBoletos.has(item.id as string)) continue; // ya generados, no duplicar
     const cantidad = item.quantity as number;
+    // Boletos nominativos: cada unidad comprada trae su propio asistente
+    // (capturado en el checkout, ver migracion 0008). Ordenes viejas sin
+    // este dato quedan con holder_name/holder_document en null.
+    const asistentes = (item.asistentes as Asistente[] | null) ?? [];
     for (let i = 0; i < cantidad; i++) {
       const id = crypto.randomUUID();
+      const asistente = asistentes[i];
       filas.push({
         id,
         order_item_id: item.id as string,
         qr_signed: firmarTicket(id),
         holder_user_id: holderUserId,
+        holder_name: asistente?.nombre?.trim() || null,
+        holder_document: asistente?.documento?.trim() || null,
       });
     }
   }

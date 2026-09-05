@@ -55,7 +55,7 @@ export default async function CrmPage() {
 
   return (
     <main className="container">
-      <h1>CRM — Monarca Tickets</h1>
+      <h1>Panel — Monarca Tickets</h1>
       <p className="page-lede">Panel interno para revisar organizadores, habilitacion DIAN y ordenes de la plataforma.</p>
 
       <div className="stat-grid">

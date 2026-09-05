@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireApiClient } from "@/lib/api-auth";
 import { buscarOCrearComprador } from "@/lib/comprador-guest";
 import { crearLinkDePago, BoldError } from "@/lib/bold";
+import { validarAsistentes } from "@/lib/asistentes";
 
 // Crea una orden + link de pago Bold para un comprador que no tiene
 // sesion en el sitio (ej. alguien comprando por WhatsApp). Misma logica
@@ -31,6 +32,13 @@ export async function POST(req: NextRequest) {
       { error: "datos_invalidos", detalle: "Se requiere ticket_type_id, cantidad (1-10) y comprador.{nombre,correo}" },
       { status: 400 }
     );
+  }
+
+  // Boletos nominativos: un asistente (nombre + cedula) por cada unidad,
+  // igual que en el checkout del sitio -- ver lib/asistentes.ts.
+  const asistentesResult = validarAsistentes(body?.asistentes, quantity);
+  if (!asistentesResult.ok) {
+    return NextResponse.json({ error: "asistentes_invalidos", detalle: asistentesResult.error }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -85,6 +93,7 @@ export async function POST(req: NextRequest) {
     ticket_type_id: ticketTypeId,
     quantity,
     unit_price_cop: tipo.price_cop,
+    asistentes: asistentesResult.asistentes,
   });
 
   if (itemError) {

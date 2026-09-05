@@ -8,6 +8,8 @@ type BoletoConDetalle = {
   qr_signed: string;
   status: string;
   created_at: string;
+  holder_name: string | null;
+  holder_document: string | null;
   order_items: {
     quantity: number;
     unit_price_cop: number;
@@ -29,15 +31,13 @@ export default async function BoletoPage({ params }: { params: Promise<{ id: str
 
   if (!user) redirect("/login");
 
-  const { data: perfil } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
-
   // RLS (tickets_select_own_or_staff) ya garantiza que solo el dueno del
   // boleto (o staff/admin) pueda leer esta fila — no hace falta filtrar por
   // holder_user_id aqui a mano.
   const { data } = await supabase
     .from("tickets")
     .select(
-      "id, qr_signed, status, created_at, order_items(quantity, unit_price_cop, ticket_types(name), orders(id, status, events(name, venue, city, starts_at)))"
+      "id, qr_signed, status, created_at, holder_name, holder_document, order_items(quantity, unit_price_cop, ticket_types(name), orders(id, status, events(name, venue, city, starts_at)))"
     )
     .eq("id", id)
     .single();
@@ -56,7 +56,8 @@ export default async function BoletoPage({ params }: { params: Promise<{ id: str
         evento={orden.events}
         tipoBoleto={boleto.order_items?.ticket_types?.name ?? "General"}
         precio={boleto.order_items?.unit_price_cop ?? 0}
-        titular={perfil?.full_name || user.email || "Titular"}
+        holderName={boleto.holder_name}
+        holderDocument={boleto.holder_document}
         estado={boleto.status}
         serial={serial}
         qrDataUrl={qrDataUrl}
