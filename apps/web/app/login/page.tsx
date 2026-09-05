@@ -1,4 +1,5 @@
 import { login } from "./actions";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 export default async function LoginPage({
   searchParams,
@@ -6,6 +7,7 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   return (
     <main className="container" style={{ display: "flex", justifyContent: "center", paddingTop: 64 }}>
@@ -21,6 +23,7 @@ export default async function LoginPage({
             <label htmlFor="password">Contraseña</label>
             <input id="password" name="password" type="password" required />
           </div>
+          {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} action="login" />}
           <button type="submit" className="btn btn-primary">
             Ingresar
           </button>

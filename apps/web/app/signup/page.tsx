@@ -1,4 +1,5 @@
 import { signup } from "./actions";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 export default async function SignupPage({
   searchParams,
@@ -8,6 +9,7 @@ export default async function SignupPage({
   const { error, revisaCorreo, tipo } = await searchParams;
   const esEmpresa = tipo === "empresa";
   const role = esEmpresa ? "organizador" : "comprador";
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   if (revisaCorreo) {
     return (
@@ -47,6 +49,7 @@ export default async function SignupPage({
             <label htmlFor="password">Contraseña</label>
             <input id="password" name="password" type="password" required minLength={8} />
           </div>
+          {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} action="signup" />}
           <button type="submit" className="btn btn-primary">
             Crear cuenta
           </button>
