@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireApiClient } from "@/lib/api-auth";
+import { esEventoActivo, tiposDeBoletoPorEvento } from "@/lib/api-eventos";
 
 // API publica para integraciones de terceros (bot de WhatsApp, etc.).
 // Ver documentacion en /docs/api-partners.md.
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
   const admin = createAdminClient();
   let query = admin
     .from("events")
-    .select("id, name, description, venue, city, category, starts_at, status, image_url")
+    .select("id, name, description, venue, city, category, starts_at, ends_at, status, image_url")
     .in("status", ["publicado", "en_venta"])
     .order("starts_at", { ascending: true })
     .limit(limit);
@@ -38,5 +39,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "error_consultando_eventos" }, { status: 500 });
   }
 
-  return NextResponse.json({ eventos: data });
+  const eventos = data ?? [];
+  const tiposPorEvento = await tiposDeBoletoPorEvento(
+    admin,
+    eventos.map((e) => e.id)
+  );
+
+  const resultado = eventos.map((e) => ({
+    ...e,
+    activo: esEventoActivo(e.status),
+    tipos_de_boleto: tiposPorEvento.get(e.id) ?? [],
+  }));
+
+  return NextResponse.json({ eventos: resultado });
 }

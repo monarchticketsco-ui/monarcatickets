@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireApiClient } from "@/lib/api-auth";
+import { esEventoActivo, tiposDeBoletoPorEvento } from "@/lib/api-eventos";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireApiClient(req, "eventos:leer");
@@ -9,29 +10,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const admin = createAdminClient();
 
-  const { data: evento } = await admin
+  const { data: eventoCrudo } = await admin
     .from("events")
-    .select("id, name, description, venue, city, category, starts_at, status, image_url")
+    .select("id, name, description, venue, city, category, starts_at, ends_at, status, image_url")
     .eq("id", id)
     .in("status", ["publicado", "en_venta"])
     .maybeSingle();
 
-  if (!evento) {
+  if (!eventoCrudo) {
     return NextResponse.json({ error: "evento_no_encontrado" }, { status: 404 });
   }
 
-  const { data: tiposDeBoleto } = await admin
-    .from("ticket_types")
-    .select("id, name, price_cop, capacity, sold_count")
-    .eq("event_id", id)
-    .order("price_cop", { ascending: false });
+  const evento = { ...eventoCrudo, activo: esEventoActivo(eventoCrudo.status) };
 
-  const boletos = (tiposDeBoleto ?? []).map((t) => ({
-    id: t.id,
-    nombre: t.name,
-    precio_cop: t.price_cop,
-    disponibles: t.capacity - t.sold_count,
-  }));
+  const tiposPorEvento = await tiposDeBoletoPorEvento(admin, [id]);
+  const boletos = tiposPorEvento.get(id) ?? [];
 
   return NextResponse.json({ evento, tipos_de_boleto: boletos });
 }

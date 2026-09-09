@@ -59,12 +59,22 @@ curl "https://monarcatickets-web.vercel.app/api/v1/eventos?ciudad=Bogot%C3%A1&ca
       "city": "Bogotá",
       "category": "Concierto",
       "starts_at": "2026-09-18T20:00:00-05:00",
+      "ends_at": "2026-09-19T02:00:00-05:00",
       "status": "en_venta",
-      "image_url": null
+      "activo": true,
+      "image_url": null,
+      "tipos_de_boleto": [
+        { "id": "uuid", "nombre": "General", "precio_cop": 180000, "disponibles": 2731 },
+        { "id": "uuid", "nombre": "VIP", "precio_cop": 350000, "disponibles": 412 }
+      ]
     }
   ]
 }
 ```
+
+- `ends_at` — fecha y hora de terminación del evento. Puede venir `null` si el organizador no la llenó.
+- `activo` — booleano derivado de `status`: `true` solo cuando el evento está `en_venta` (boletos disponibles ahora mismo); `false` si está `publicado` pero la venta aún no abre. (Los estados `borrador`, `finalizado` y `cancelado` nunca aparecen en esta API.)
+- `tipos_de_boleto` — localidades y precios del evento, en el mismo formato que en `GET /api/v1/eventos/:id` (ver abajo). Viene incluido también en el listado para que no tengas que pedir el detalle de cada evento por separado.
 
 ## `GET /api/v1/eventos/:id`
 
@@ -77,7 +87,16 @@ curl "https://monarcatickets-web.vercel.app/api/v1/eventos/<id>" \
 
 ```json
 {
-  "evento": { "id": "uuid", "name": "...", "venue": "...", "city": "...", "starts_at": "...", "status": "en_venta" },
+  "evento": {
+    "id": "uuid",
+    "name": "...",
+    "venue": "...",
+    "city": "...",
+    "starts_at": "...",
+    "ends_at": "2026-09-19T02:00:00-05:00",
+    "status": "en_venta",
+    "activo": true
+  },
   "tipos_de_boleto": [
     { "id": "uuid", "nombre": "General", "precio_cop": 180000, "disponibles": 2731 },
     { "id": "uuid", "nombre": "VIP", "precio_cop": 350000, "disponibles": 412 }
@@ -85,7 +104,7 @@ curl "https://monarcatickets-web.vercel.app/api/v1/eventos/<id>" \
 }
 ```
 
-Usa `tipos_de_boleto[].id` como `ticket_type_id` al crear la orden.
+`ends_at` y `activo` funcionan igual que en `GET /api/v1/eventos` (ver arriba). Usa `tipos_de_boleto[].id` como `ticket_type_id` al crear la orden.
 
 ## `POST /api/v1/ordenes`
 
