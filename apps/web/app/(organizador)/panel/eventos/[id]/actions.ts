@@ -52,12 +52,18 @@ export async function crearTipoDeBoleto(eventId: string, formData: FormData) {
   const name = String(formData.get("name"));
   const priceCop = Number(formData.get("price_cop"));
   const capacity = Number(formData.get("capacity"));
+  const etapa = String(formData.get("etapa") || "").trim();
+  const saleStartsAtRaw = String(formData.get("sale_starts_at") || "").trim();
+  const saleEndsAtRaw = String(formData.get("sale_ends_at") || "").trim();
 
   const { error } = await supabase.from("ticket_types").insert({
     event_id: eventId,
     name,
     price_cop: priceCop,
     capacity,
+    etapa: etapa || null,
+    sale_starts_at: saleStartsAtRaw ? new Date(saleStartsAtRaw).toISOString() : null,
+    sale_ends_at: saleEndsAtRaw ? new Date(saleEndsAtRaw).toISOString() : null,
   });
 
   if (error) {
@@ -77,6 +83,9 @@ export async function actualizarTipoDeBoleto(eventId: string, ticketTypeId: stri
   const name = String(formData.get("name") || "").trim();
   const priceCop = Number(formData.get("price_cop"));
   const capacity = Number(formData.get("capacity"));
+  const etapa = String(formData.get("etapa") || "").trim();
+  const saleStartsAtRaw = String(formData.get("sale_starts_at") || "").trim();
+  const saleEndsAtRaw = String(formData.get("sale_ends_at") || "").trim();
 
   if (!name || !Number.isFinite(priceCop) || priceCop < 0 || !Number.isFinite(capacity) || capacity < 0) {
     redirect(`/panel/eventos/${eventId}?error=${encodeURIComponent("Datos de la localidad invalidos")}`);
@@ -99,7 +108,14 @@ export async function actualizarTipoDeBoleto(eventId: string, ticketTypeId: stri
 
   const { error } = await supabase
     .from("ticket_types")
-    .update({ name, price_cop: priceCop, capacity })
+    .update({
+      name,
+      price_cop: priceCop,
+      capacity,
+      etapa: etapa || null,
+      sale_starts_at: saleStartsAtRaw ? new Date(saleStartsAtRaw).toISOString() : null,
+      sale_ends_at: saleEndsAtRaw ? new Date(saleEndsAtRaw).toISOString() : null,
+    })
     .eq("id", ticketTypeId)
     .eq("event_id", eventId);
 
@@ -118,6 +134,28 @@ export async function actualizarImagen(eventId: string, formData: FormData) {
   const { error } = await supabase
     .from("events")
     .update({ image_url: imageUrl || null })
+    .eq("id", eventId)
+    .eq("organizer_id", organizer.id);
+
+  if (error) {
+    redirect(`/panel/eventos/${eventId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/panel/eventos/${eventId}`);
+}
+
+// ---------------------------------------------------------------------
+// Banner ancho para la cabecera de la pagina publica del evento (distinto
+// de la portada/image_url, que se usa en las tarjetas de /eventos).
+// ---------------------------------------------------------------------
+export async function actualizarBanner(eventId: string, formData: FormData) {
+  const { supabase, organizer } = await requireOrganizer();
+
+  const bannerUrl = String(formData.get("banner_url") || "").trim();
+
+  const { error } = await supabase
+    .from("events")
+    .update({ banner_url: bannerUrl || null })
     .eq("id", eventId)
     .eq("organizer_id", organizer.id);
 

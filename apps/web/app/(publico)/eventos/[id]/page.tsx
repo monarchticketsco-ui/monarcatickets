@@ -19,7 +19,7 @@ export default async function EventoPublicoPage({
   const { data: evento } = await supabase
     .from("events")
     .select(
-      "id, name, description, venue, city, starts_at, status, category, image_url, doors_open_at, min_age, seating_type, capacity, food_sale, alcohol_sale, wheelchair_accessible, pregnant_allowed, venue_address, lineup, pulep_code, responsable_razon_social, responsable_nit, responsable_direccion, responsable_email, terms_extra"
+      "id, name, description, venue, city, starts_at, status, category, image_url, banner_url, doors_open_at, min_age, seating_type, capacity, food_sale, alcohol_sale, wheelchair_accessible, pregnant_allowed, venue_address, lineup, pulep_code, responsable_razon_social, responsable_nit, responsable_direccion, responsable_email, terms_extra"
     )
     .eq("id", id)
     .in("status", ["publicado", "en_venta"])
@@ -30,7 +30,7 @@ export default async function EventoPublicoPage({
   const [{ data: tiposDeBoleto }, { data: imagenesLocalidad }] = await Promise.all([
     supabase
       .from("ticket_types")
-      .select("id, name, price_cop, capacity, sold_count")
+      .select("id, name, price_cop, capacity, sold_count, etapa, sale_starts_at, sale_ends_at")
       .eq("event_id", id)
       .order("price_cop", { ascending: false }),
     supabase
@@ -69,6 +69,8 @@ export default async function EventoPublicoPage({
     .filter(Boolean)
     .join(", ");
   const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(direccionCompleta)}&output=embed`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionCompleta)}`;
+  const ahora = Date.now();
 
   const tieneResponsable =
     evento.responsable_razon_social || evento.responsable_nit || evento.responsable_direccion || evento.responsable_email;
@@ -80,7 +82,7 @@ export default async function EventoPublicoPage({
         className="hero-slide"
         style={{ borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", marginBottom: 28 }}
       >
-        <img src={evento.image_url || imagenDeEvento(evento.id, evento.category, 1400)} alt="" />
+        <img src={evento.banner_url || evento.image_url || imagenDeEvento(evento.id, evento.category, 1400)} alt="" />
         <div className="hero-slide-scrim" />
         <div className="hero-slide-content" style={{ maxWidth: "none" }}>
           {evento.category && <p className="event-card-eyebrow">{evento.category}</p>}
@@ -124,6 +126,10 @@ export default async function EventoPublicoPage({
       <p className="muted" style={{ margin: "0 0 12px" }}>
         {evento.venue}
         {evento.venue_address ? ` — ${evento.venue_address}` : ""} — {evento.city}
+        {" · "}
+        <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-link">
+          Como llegar (Google Maps)
+        </a>
       </p>
       <div className="map-embed">
         <iframe src={mapSrc} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={`Mapa de ${evento.venue}`} />
@@ -147,18 +153,49 @@ export default async function EventoPublicoPage({
         <div className="card">
           {tiposDeBoleto.map((t) => {
             const disponibles = t.capacity - t.sold_count;
+            const agotado = disponibles <= 0;
+            const finalizado = Boolean(t.sale_ends_at) && new Date(t.sale_ends_at as string).getTime() < ahora;
+            const proximamente = Boolean(t.sale_starts_at) && new Date(t.sale_starts_at as string).getTime() > ahora;
+            const comprable = ventaAbierta && !agotado && !finalizado && !proximamente;
+
+            let badgeClase = "badge badge-green";
+            let badgeTexto = `${disponibles} disponibles`;
+            if (agotado) {
+              badgeClase = "badge badge-danger";
+              badgeTexto = "Agotado";
+            } else if (finalizado) {
+              badgeClase = "badge";
+              badgeTexto = "Etapa finalizada";
+            } else if (proximamente) {
+              badgeClase = "badge badge-blue";
+              badgeTexto = `Disponible desde ${new Date(t.sale_starts_at as string).toLocaleDateString("es-CO")}`;
+            }
+
             return (
               <div className="ticket-row" key={t.id}>
                 <div className="ticket-info">
-                  <h3 style={{ margin: "0 0 4px" }}>{t.name}</h3>
+                  <h3 style={{ margin: "0 0 4px" }}>
+                    {t.name}
+                    {t.etapa && (
+                      <span className="muted" style={{ fontWeight: 400, fontSize: "0.85rem" }}>
+                        {" "}
+                        · {t.etapa}
+                      </span>
+                    )}
+                  </h3>
                   <p className="price" style={{ margin: 0 }}>
                     ${t.price_cop.toLocaleString("es-CO")} COP
                   </p>
-                  <span className={`badge ${disponibles > 0 ? "badge-green" : "badge-danger"}`}>
-                    {disponibles > 0 ? `${disponibles} disponibles` : "Agotado"}
-                  </span>
+                  {(t.sale_starts_at || t.sale_ends_at) && (
+                    <p className="muted" style={{ fontSize: "0.8rem", margin: "2px 0 0" }}>
+                      {t.sale_starts_at && `Desde ${new Date(t.sale_starts_at).toLocaleDateString("es-CO")}`}
+                      {t.sale_starts_at && t.sale_ends_at && " · "}
+                      {t.sale_ends_at && `Hasta ${new Date(t.sale_ends_at).toLocaleDateString("es-CO")}`}
+                    </p>
+                  )}
+                  <span className={badgeClase}>{badgeTexto}</span>
                 </div>
-                {ventaAbierta && <ComprarBoton ticketTypeId={t.id} disponibles={disponibles} />}
+                {comprable && <ComprarBoton ticketTypeId={t.id} disponibles={disponibles} />}
               </div>
             );
           })}
