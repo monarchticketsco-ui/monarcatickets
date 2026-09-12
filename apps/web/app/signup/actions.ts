@@ -29,10 +29,11 @@ export async function signup(formData: FormData) {
     redirect(`/signup?error=${encodeURIComponent(error.message)}`);
   }
 
-  // Sin confirmacion de correo (proyecto configurado asi) ya hay sesion:
-  // mandamos directo a completar el perfil de organizador si aplica.
+  // Sin confirmacion de correo (proyecto configurado asi) ya hay sesion.
+  // El auto-registro siempre crea compradores (ver comentario arriba), asi
+  // que no hay redireccion especial a completar perfil de organizador.
   if (data.session) {
-    redirect(role === "organizador" ? "/panel/completar-perfil" : "/");
+    redirect("/");
   }
 
   redirect("/signup?revisaCorreo=1");
