@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { signup } from "./actions";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 
@@ -8,7 +9,15 @@ export default async function SignupPage({
 }) {
   const { error, revisaCorreo, tipo } = await searchParams;
   const esEmpresa = tipo === "empresa";
-  const role = esEmpresa ? "organizador" : "comprador";
+
+  // El auto-registro de empresas quedo cerrado: la cuenta de organizador
+  // la crea un admin desde el CRM despues de contactar al cliente (ver
+  // /empresas). Cualquier visita a /signup?tipo=empresa se redirige alla.
+  if (esEmpresa) {
+    redirect("/empresas");
+  }
+
+  const role = "comprador";
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   if (revisaCorreo) {
@@ -58,11 +67,7 @@ export default async function SignupPage({
           ¿Ya tienes cuenta? <a href="/login">Ingresa</a>
         </p>
         <p className="muted" style={{ marginTop: 6, fontSize: "0.85rem" }}>
-          {esEmpresa ? (
-            <>¿Vienes a comprar boletos? <a href="/signup?tipo=persona">Crea tu cuenta de persona</a></>
-          ) : (
-            <>¿Vas a vender boletos de tu evento? <a href="/signup?tipo=empresa">Crea tu cuenta de empresa</a></>
-          )}
+          ¿Vas a vender boletos de tu evento? <a href="/empresas">Conoce el portal empresas</a>
         </p>
       </div>
     </main>

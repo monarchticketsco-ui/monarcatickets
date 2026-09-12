@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { actualizarDianStatus, revocarApiCliente } from "./actions";
+import { actualizarEstadoLead } from "./organizadores/actions";
 import { ApiClientForm } from "./api-client-form";
 
 const ESTADOS_DIAN = ["no_habilitado", "en_proceso", "habilitado"] as const;
@@ -16,10 +18,17 @@ const ORDEN_BADGE: Record<string, string> = {
   fallida: "badge badge-danger",
 };
 
+const LEAD_BADGE: Record<string, string> = {
+  nuevo: "badge badge-blue",
+  contactado: "badge badge-warning",
+  convertido: "badge badge-green",
+  descartado: "badge",
+};
+
 export default async function CrmPage() {
   const { supabase } = await requireAdmin();
 
-  const [organizersRes, eventsRes, ordenesRecientesRes, pagadasRes, apiClientsRes] = await Promise.all([
+  const [organizersRes, eventsRes, ordenesRecientesRes, pagadasRes, apiClientsRes, leadsRes] = await Promise.all([
     supabase
       .from("organizers")
       .select("id, legal_name, nit, dian_status, commission_rate, events(count)")
@@ -35,6 +44,11 @@ export default async function CrmPage() {
       .from("api_clients")
       .select("id, company_name, scopes, rate_limit_per_min, created_at")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("empresa_leads")
+      .select("id, nombre, empresa, correo, telefono, mensaje, estado, created_at")
+      .order("created_at", { ascending: false })
+      .limit(30),
   ]);
 
   const organizadores = organizersRes.data ?? [];
@@ -42,6 +56,7 @@ export default async function CrmPage() {
   const ordenesRecientes = ordenesRecientesRes.data ?? [];
   const ingresosTotalesCop = (pagadasRes.data ?? []).reduce((acc, o) => acc + o.total_cop, 0);
   const apiClientes = apiClientsRes.data ?? [];
+  const leads = leadsRes.data ?? [];
 
   const eventosPorEstado = eventos.reduce<Record<string, number>>((acc, e) => {
     acc[e.status] = (acc[e.status] ?? 0) + 1;
@@ -77,7 +92,12 @@ export default async function CrmPage() {
         </div>
       </div>
 
-      <h2>Organizadores</h2>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        <h2 style={{ marginBottom: 0 }}>Organizadores</h2>
+        <Link href="/crm/organizadores/nuevo" className="btn btn-primary btn-sm">
+          + Crear cuenta de empresa
+        </Link>
+      </div>
       {organizadores.length === 0 ? (
         <p className="empty-state">Todavia no hay organizadores registrados.</p>
       ) : (
@@ -98,7 +118,11 @@ export default async function CrmPage() {
                 const totalEventos = Array.isArray(o.events) ? (o.events[0]?.count ?? 0) : 0;
                 return (
                   <tr key={o.id}>
-                    <td>{o.legal_name}</td>
+                    <td>
+                      <Link href={`/crm/organizadores/${o.id}`} className="text-link">
+                        {o.legal_name}
+                      </Link>
+                    </td>
                     <td>{o.nit}</td>
                     <td>{o.commission_rate}%</td>
                     <td>{totalEventos}</td>
@@ -132,6 +156,86 @@ export default async function CrmPage() {
                   </tr>
                 );
               })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2>Solicitudes de empresas (portal empresas)</h2>
+      <p className="page-lede">
+        Clientes potenciales que dejaron sus datos en /empresas para vender boletos con nosotros. Contactalos y crea
+        su cuenta cuando esten listos.
+      </p>
+      {leads.length === 0 ? (
+        <p className="empty-state">Todavia no hay solicitudes.</p>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Nombre</th>
+                <th>Empresa</th>
+                <th>Contacto</th>
+                <th>Mensaje</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((lead) => (
+                <tr key={lead.id}>
+                  <td>{new Date(lead.created_at).toLocaleDateString("es-CO")}</td>
+                  <td>{lead.nombre}</td>
+                  <td>{lead.empresa ?? "—"}</td>
+                  <td>
+                    {lead.correo}
+                    {lead.telefono ? ` · ${lead.telefono}` : ""}
+                  </td>
+                  <td style={{ maxWidth: 220 }}>{lead.mensaje ?? "—"}</td>
+                  <td>
+                    <span className={LEAD_BADGE[lead.estado] ?? "badge"}>{lead.estado}</span>
+                  </td>
+                  <td style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {lead.estado !== "contactado" && (
+                      <form
+                        action={async () => {
+                          "use server";
+                          await actualizarEstadoLead(lead.id, "contactado");
+                        }}
+                      >
+                        <button type="submit" className="btn btn-secondary btn-sm">
+                          Contactado
+                        </button>
+                      </form>
+                    )}
+                    {lead.estado !== "descartado" && lead.estado !== "convertido" && (
+                      <form
+                        action={async () => {
+                          "use server";
+                          await actualizarEstadoLead(lead.id, "descartado");
+                        }}
+                      >
+                        <button type="submit" className="btn btn-secondary btn-sm">
+                          Descartar
+                        </button>
+                      </form>
+                    )}
+                    {lead.estado !== "convertido" && (
+                      <Link
+                        href={`/crm/organizadores/nuevo?nombre=${encodeURIComponent(lead.nombre)}&empresa=${encodeURIComponent(
+                          lead.empresa ?? ""
+                        )}&correo=${encodeURIComponent(lead.correo)}&telefono=${encodeURIComponent(
+                          lead.telefono ?? ""
+                        )}&leadId=${lead.id}`}
+                        className="btn btn-primary btn-sm"
+                      >
+                        Crear cuenta
+                      </Link>
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

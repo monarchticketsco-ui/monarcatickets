@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { whatsappLink } from "@/lib/whatsapp";
+import { EmpresaLeadForm } from "./lead-form";
 
 export const metadata = {
   title: "Portal empresas — Monarca Tickets",
@@ -36,8 +38,8 @@ export default function EmpresasPage() {
         <p className="event-card-eyebrow">Portal empresas</p>
         <h1>Vende los boletos de tu evento con Monarca Tickets</h1>
         <p className="page-lede">
-          Crea tu evento, define localidades y precios, y empieza a vender en minutos. Tú te encargas de la
-          experiencia, nosotros del cobro, el aforo y los boletos digitales.
+          Cuentanos de tu evento y nuestro equipo crea tu cuenta de empresa. Tú te encargas de la experiencia,
+          nosotros del cobro, el aforo y los boletos digitales.
         </p>
       </div>
 
@@ -64,14 +66,21 @@ export default function EmpresasPage() {
         ))}
       </div>
 
-      <div className="portal-cta-row">
-        <Link href="/signup?tipo=empresa" className="btn btn-primary">
-          Crear cuenta de empresa
-        </Link>
+      <div className="portal-cta-row" style={{ marginBottom: 16 }}>
+        <a
+          href={whatsappLink("Hola, quiero vender los boletos de mi evento con Monarca Tickets")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-primary"
+        >
+          Escribenos por WhatsApp
+        </a>
         <p className="muted" style={{ margin: 0 }}>
           ¿Ya vendes con nosotros? <Link href="/login" className="text-link">Ingresa</Link>
         </p>
       </div>
+
+      <EmpresaLeadForm />
     </main>
   );
 }

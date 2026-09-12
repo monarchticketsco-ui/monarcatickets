@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Chakra_Petch, Rajdhani } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { WhatsAppWidget } from "@/components/whatsapp-widget";
 import "./globals.css";
 
 const chakraPetch = Chakra_Petch({
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteHeader />
         {children}
         <SiteFooter />
+        <WhatsAppWidget />
       </body>
     </html>
   );

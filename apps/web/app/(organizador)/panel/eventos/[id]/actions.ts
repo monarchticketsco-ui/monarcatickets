@@ -5,6 +5,47 @@ import { redirect } from "next/navigation";
 import { requireOrganizer } from "@/lib/organizer";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// ---------------------------------------------------------------------
+// Informacion basica del evento: nombre, lugar, ciudad, categoria y
+// fechas. Antes solo se podian fijar al crear el evento (panel/eventos/
+// nuevo); ahora tambien se pueden editar despues.
+// ---------------------------------------------------------------------
+export async function actualizarCore(eventId: string, formData: FormData) {
+  const { supabase, organizer } = await requireOrganizer();
+
+  const name = String(formData.get("name") || "").trim();
+  const venue = String(formData.get("venue") || "").trim();
+  const city = String(formData.get("city") || "").trim();
+  const category = String(formData.get("category") || "").trim();
+  const startsAtRaw = String(formData.get("starts_at") || "").trim();
+  const endsAtRaw = String(formData.get("ends_at") || "").trim();
+
+  if (!name || !venue || !city || !startsAtRaw) {
+    redirect(
+      `/panel/eventos/${eventId}?error=${encodeURIComponent("Nombre, lugar, ciudad y fecha de inicio son obligatorios")}`
+    );
+  }
+
+  const { error } = await supabase
+    .from("events")
+    .update({
+      name,
+      venue,
+      city,
+      category: category || null,
+      starts_at: new Date(startsAtRaw).toISOString(),
+      ends_at: endsAtRaw ? new Date(endsAtRaw).toISOString() : null,
+    })
+    .eq("id", eventId)
+    .eq("organizer_id", organizer.id);
+
+  if (error) {
+    redirect(`/panel/eventos/${eventId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/panel/eventos/${eventId}`);
+}
+
 export async function crearTipoDeBoleto(eventId: string, formData: FormData) {
   const { supabase } = await requireOrganizer();
 
@@ -18,6 +59,49 @@ export async function crearTipoDeBoleto(eventId: string, formData: FormData) {
     price_cop: priceCop,
     capacity,
   });
+
+  if (error) {
+    redirect(`/panel/eventos/${eventId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/panel/eventos/${eventId}`);
+}
+
+// ---------------------------------------------------------------------
+// Editar una localidad/tipo de boleto existente (nombre, precio, aforo).
+// El aforo no puede bajar del numero de boletos ya vendidos.
+// ---------------------------------------------------------------------
+export async function actualizarTipoDeBoleto(eventId: string, ticketTypeId: string, formData: FormData) {
+  const { supabase } = await requireOrganizer();
+
+  const name = String(formData.get("name") || "").trim();
+  const priceCop = Number(formData.get("price_cop"));
+  const capacity = Number(formData.get("capacity"));
+
+  if (!name || !Number.isFinite(priceCop) || priceCop < 0 || !Number.isFinite(capacity) || capacity < 0) {
+    redirect(`/panel/eventos/${eventId}?error=${encodeURIComponent("Datos de la localidad invalidos")}`);
+  }
+
+  const { data: actual } = await supabase
+    .from("ticket_types")
+    .select("sold_count")
+    .eq("id", ticketTypeId)
+    .eq("event_id", eventId)
+    .single();
+
+  if (actual && capacity < actual.sold_count) {
+    redirect(
+      `/panel/eventos/${eventId}?error=${encodeURIComponent(
+        `El aforo no puede ser menor a los boletos ya vendidos (${actual.sold_count})`
+      )}`
+    );
+  }
+
+  const { error } = await supabase
+    .from("ticket_types")
+    .update({ name, price_cop: priceCop, capacity })
+    .eq("id", ticketTypeId)
+    .eq("event_id", eventId);
 
   if (error) {
     redirect(`/panel/eventos/${eventId}?error=${encodeURIComponent(error.message)}`);

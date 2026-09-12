@@ -9,8 +9,12 @@ export async function signup(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
   const fullName = String(formData.get("full_name") || "");
-  const role = formData.get("role") === "organizador" ? "organizador" : "comprador";
   const captchaToken = formData.get("captchaToken");
+
+  // El auto-registro de organizadores quedo cerrado (ver /empresas): esa
+  // cuenta la crea un admin desde el CRM. Si alguien intenta forzar
+  // role=organizador en el POST igual queda como comprador.
+  const role = "comprador";
 
   const { data, error } = await supabase.auth.signUp({
     email,

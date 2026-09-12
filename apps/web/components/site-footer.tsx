@@ -1,11 +1,12 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
 import { NewsletterForm } from "./newsletter-form";
+import { whatsappLink } from "@/lib/whatsapp";
 
 const CORREO_CONTACTO = "monarchpasstickets@gmail.com";
 
 const REDES = [
-  { nombre: "WhatsApp", href: "#" },
+  { nombre: "WhatsApp", href: whatsappLink() },
   { nombre: "TikTok", href: "#" },
   { nombre: "YouTube", href: "#" },
   { nombre: "Instagram", href: "#" },
