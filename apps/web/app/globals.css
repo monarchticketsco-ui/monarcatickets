@@ -1278,6 +1278,99 @@ tbody tr:hover {
   color: var(--muted);
 }
 
+/* ---------- ficha del evento: bloques de seccion ---------- */
+
+.event-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 28px 32px;
+  margin: 0 0 20px;
+}
+
+.event-section h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .event-section {
+    padding: 20px 18px 24px;
+    border-radius: var(--radius);
+  }
+}
+
+/* localidad: imagen protagonista, sin recortar (los mapas de venue suelen
+   venir en retrato o con proporciones raras; recortarlos a 1:1 los vuelve
+   ilegibles, asi que aqui se contienen completos sobre un fondo propio). */
+.localidad-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.localidad-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  min-height: 360px;
+}
+
+.localidad-frame img {
+  width: 100%;
+  height: 100%;
+  max-height: 620px;
+  object-fit: contain;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+
+/* boletos agrupados por localidad, en formato tabla */
+.ticket-zones {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.ticket-zone-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ticket-zone-head h3 {
+  margin: 0;
+}
+
+.ticket-zone-head .price {
+  font-family: var(--font-heading);
+  color: var(--green);
+  white-space: nowrap;
+}
+
+.price-cell {
+  font-family: var(--font-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket-action-cell {
+  white-space: normal;
+  min-width: 190px;
+}
+
+tr.ticket-row-inactiva {
+  opacity: 0.55;
+}
+
+tr.ticket-row-inactiva:hover {
+  background: transparent;
+}
+
 /* ---------- ficha del evento: mapa, bloque legal, galeria de localidades ---------- */
 
 .map-embed {

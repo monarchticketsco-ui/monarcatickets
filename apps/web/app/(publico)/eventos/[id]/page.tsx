@@ -8,6 +8,45 @@ const ACOMODACION: Record<string, string> = {
   numerada: "Numerada",
 };
 
+type TicketTypeRow = {
+  id: string;
+  name: string;
+  price_cop: number;
+  capacity: number;
+  sold_count: number;
+  etapa: string | null;
+  sale_starts_at: string | null;
+  sale_ends_at: string | null;
+};
+
+// Agrupa los tipos de boleto por localidad (name) preservando el orden de
+// aparicion, y ordena cada grupo cronologicamente (preventa antes que
+// etapas siguientes) para que se lea como una tabla de precios por zona,
+// no como una lista plana de 15 filas sueltas.
+function agruparPorLocalidad(tipos: TicketTypeRow[]) {
+  const orden: string[] = [];
+  const grupos = new Map<string, TicketTypeRow[]>();
+  for (const t of tipos) {
+    if (!grupos.has(t.name)) {
+      grupos.set(t.name, []);
+      orden.push(t.name);
+    }
+    grupos.get(t.name)!.push(t);
+  }
+  return orden
+    .map((nombre) => {
+      const filas = grupos.get(nombre)!;
+      filas.sort((a, b) => {
+        const fa = a.sale_starts_at ? new Date(a.sale_starts_at).getTime() : -Infinity;
+        const fb = b.sale_starts_at ? new Date(b.sale_starts_at).getTime() : -Infinity;
+        return fa - fb;
+      });
+      const precios = filas.map((f) => f.price_cop);
+      return { nombre, filas, precioMin: Math.min(...precios), precioMax: Math.max(...precios) };
+    })
+    .sort((a, b) => b.precioMax - a.precioMax);
+}
+
 export default async function EventoPublicoPage({
   params,
 }: {
@@ -76,6 +115,8 @@ export default async function EventoPublicoPage({
     evento.responsable_razon_social || evento.responsable_nit || evento.responsable_direccion || evento.responsable_email;
   const tieneLegal = tieneResponsable || evento.pulep_code;
 
+  const zonas = tiposDeBoleto ? agruparPorLocalidad(tiposDeBoleto) : [];
+
   return (
     <main className="container">
       <div
@@ -90,7 +131,7 @@ export default async function EventoPublicoPage({
         </div>
       </div>
 
-      <div style={{ marginBottom: 8 }}>
+      <div style={{ marginBottom: 28 }}>
         <p className="page-lede">
           {evento.venue} · {evento.city} ·{" "}
           {new Date(evento.starts_at).toLocaleString("es-CO", {
@@ -103,16 +144,16 @@ export default async function EventoPublicoPage({
       </div>
 
       {evento.lineup && (
-        <div style={{ marginBottom: 8 }}>
+        <section className="event-section">
           <h2>Artistas principales</h2>
-          <p style={{ whiteSpace: "pre-line" }}>{evento.lineup}</p>
-        </div>
+          <p style={{ whiteSpace: "pre-line", margin: 0 }}>{evento.lineup}</p>
+        </section>
       )}
 
       {ficha.length > 0 && (
-        <>
+        <section className="event-section">
           <h2>Detalles del evento</h2>
-          <div className="stat-grid">
+          <div className="stat-grid" style={{ margin: 0 }}>
             {ficha.map((f) => (
               <div className="stat-card" key={f.etiqueta}>
                 <div className="value" style={{ fontSize: "1.15rem" }}>{f.valor}</div>
@@ -120,96 +161,138 @@ export default async function EventoPublicoPage({
               </div>
             ))}
           </div>
-        </>
+        </section>
       )}
 
-      <h2>Ubicacion</h2>
-      <p className="muted" style={{ margin: "0 0 12px" }}>
-        {evento.venue}
-        {evento.venue_address ? ` — ${evento.venue_address}` : ""} — {evento.city}
-        {" · "}
-        <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-link">
-          Como llegar (Google Maps)
-        </a>
-      </p>
-      <div className="map-embed">
-        <iframe src={mapSrc} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={`Mapa de ${evento.venue}`} />
-      </div>
+      <section className="event-section">
+        <h2>Ubicacion</h2>
+        <p className="muted" style={{ margin: "0 0 16px" }}>
+          {evento.venue}
+          {evento.venue_address ? ` — ${evento.venue_address}` : ""} — {evento.city}
+          {" · "}
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-link">
+            Como llegar (Google Maps)
+          </a>
+        </p>
+        <div className="map-embed" style={{ margin: 0 }}>
+          <iframe src={mapSrc} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={`Mapa de ${evento.venue}`} />
+        </div>
+      </section>
 
       {imagenesLocalidad && imagenesLocalidad.length > 0 && (
-        <>
-          <h2>Localidades y zonas</h2>
-          <div className="gallery-grid">
+        <section className="event-section">
+          <h2>Mapa de localidades</h2>
+          <p className="muted" style={{ margin: "0 0 16px" }}>
+            Ubica tu localidad antes de comprar.
+          </p>
+          <div className="localidad-gallery">
             {imagenesLocalidad.map((img) => (
-              <img key={img.id} src={img.image_url} alt="Mapa de localidades del venue" loading="lazy" />
+              <div className="localidad-frame" key={img.id}>
+                <img src={img.image_url} alt="Mapa de localidades del venue" loading="lazy" />
+              </div>
             ))}
           </div>
-        </>
+        </section>
       )}
 
-      <h2>Boletos</h2>
-      {!tiposDeBoleto || tiposDeBoleto.length === 0 ? (
-        <p className="empty-state">Todavia no hay boletos a la venta para este evento.</p>
-      ) : (
-        <div className="card">
-          {tiposDeBoleto.map((t) => {
-            const disponibles = t.capacity - t.sold_count;
-            const agotado = disponibles <= 0;
-            const finalizado = Boolean(t.sale_ends_at) && new Date(t.sale_ends_at as string).getTime() < ahora;
-            const proximamente = Boolean(t.sale_starts_at) && new Date(t.sale_starts_at as string).getTime() > ahora;
-            const comprable = ventaAbierta && !agotado && !finalizado && !proximamente;
-
-            let badgeClase = "badge badge-green";
-            let badgeTexto = `${disponibles} disponibles`;
-            if (agotado) {
-              badgeClase = "badge badge-danger";
-              badgeTexto = "Agotado";
-            } else if (finalizado) {
-              badgeClase = "badge";
-              badgeTexto = "Etapa finalizada";
-            } else if (proximamente) {
-              badgeClase = "badge badge-blue";
-              badgeTexto = `Disponible desde ${new Date(t.sale_starts_at as string).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}`;
-            }
-
-            return (
-              <div className="ticket-row" key={t.id}>
-                <div className="ticket-info">
-                  <h3 style={{ margin: "0 0 4px" }}>
-                    {t.name}
-                    {t.etapa && (
-                      <span className="muted" style={{ fontWeight: 400, fontSize: "0.85rem" }}>
-                        {" "}
-                        · {t.etapa}
-                      </span>
-                    )}
-                  </h3>
-                  <p className="price" style={{ margin: 0 }}>
-                    ${t.price_cop.toLocaleString("es-CO")} COP
-                  </p>
-                  {(t.sale_starts_at || t.sale_ends_at) && (
-                    <p className="muted" style={{ fontSize: "0.8rem", margin: "2px 0 0" }}>
-                      {t.sale_starts_at && `Desde ${new Date(t.sale_starts_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}`}
-                      {t.sale_starts_at && t.sale_ends_at && " · "}
-                      {t.sale_ends_at && `Hasta ${new Date(t.sale_ends_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}`}
-                    </p>
-                  )}
-                  <span className={badgeClase}>{badgeTexto}</span>
+      <section className="event-section">
+        <h2>Boletos</h2>
+        {zonas.length === 0 ? (
+          <p className="empty-state">Todavia no hay boletos a la venta para este evento.</p>
+        ) : (
+          <div className="ticket-zones">
+            {zonas.map((zona) => (
+              <div className="ticket-zone" key={zona.nombre}>
+                <div className="ticket-zone-head">
+                  <h3>{zona.nombre}</h3>
+                  <span className="muted price">
+                    {zona.precioMin === zona.precioMax
+                      ? `$${zona.precioMin.toLocaleString("es-CO")} COP`
+                      : `Desde $${zona.precioMin.toLocaleString("es-CO")} COP`}
+                  </span>
                 </div>
-                {comprable && <ComprarBoton ticketTypeId={t.id} disponibles={disponibles} />}
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Etapa</th>
+                        <th>Precio</th>
+                        <th>Ventana de venta</th>
+                        <th>Disponibilidad</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {zona.filas.map((t) => {
+                        const disponibles = t.capacity - t.sold_count;
+                        const agotado = disponibles <= 0;
+                        const finalizado = Boolean(t.sale_ends_at) && new Date(t.sale_ends_at as string).getTime() < ahora;
+                        const proximamente = Boolean(t.sale_starts_at) && new Date(t.sale_starts_at as string).getTime() > ahora;
+                        const comprable = ventaAbierta && !agotado && !finalizado && !proximamente;
+
+                        let badgeClase = "badge badge-green";
+                        let badgeTexto = `${disponibles} disponibles`;
+                        if (agotado) {
+                          badgeClase = "badge badge-danger";
+                          badgeTexto = "Agotado";
+                        } else if (finalizado) {
+                          badgeClase = "badge";
+                          badgeTexto = "Finalizada";
+                        } else if (proximamente) {
+                          badgeClase = "badge badge-blue";
+                          badgeTexto = "Proximamente";
+                        }
+
+                        return (
+                          <tr key={t.id} className={!comprable ? "ticket-row-inactiva" : undefined}>
+                            <td>{t.etapa || "Precio unico"}</td>
+                            <td className="price-cell">${t.price_cop.toLocaleString("es-CO")}</td>
+                            <td className="muted">
+                              {t.sale_starts_at || t.sale_ends_at ? (
+                                <>
+                                  {t.sale_starts_at &&
+                                    new Date(t.sale_starts_at).toLocaleDateString("es-CO", {
+                                      timeZone: "America/Bogota",
+                                      day: "numeric",
+                                      month: "short",
+                                    })}
+                                  {t.sale_starts_at && t.sale_ends_at && " – "}
+                                  {t.sale_ends_at &&
+                                    new Date(t.sale_ends_at).toLocaleDateString("es-CO", {
+                                      timeZone: "America/Bogota",
+                                      day: "numeric",
+                                      month: "short",
+                                    })}
+                                </>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td>
+                              <span className={badgeClase}>{badgeTexto}</span>
+                            </td>
+                            <td className="ticket-action-cell">
+                              {comprable && <ComprarBoton ticketTypeId={t.id} disponibles={disponibles} />}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            );
-          })}
-        </div>
-      )}
-      {!ventaAbierta && tiposDeBoleto && tiposDeBoleto.length > 0 && (
-        <p className="muted" style={{ marginTop: 16 }}>
-          La venta de boletos para este evento aun no esta abierta.
-        </p>
-      )}
+            ))}
+          </div>
+        )}
+        {!ventaAbierta && zonas.length > 0 && (
+          <p className="muted" style={{ marginTop: 16, marginBottom: 0 }}>
+            La venta de boletos para este evento aun no esta abierta.
+          </p>
+        )}
+      </section>
 
       {tieneLegal && (
-        <div className="legal-block">
+        <section className="event-section legal-block" style={{ margin: "0 0 20px" }}>
           {evento.pulep_code && (
             <p>
               <strong>PULEP:</strong> {evento.pulep_code}
@@ -226,27 +309,29 @@ export default async function EventoPublicoPage({
               {evento.responsable_email && <p>Contacto: {evento.responsable_email}</p>}
             </>
           )}
-        </div>
+        </section>
       )}
 
-      <h2>Terminos y condiciones</h2>
-      {evento.terms_extra && <p style={{ whiteSpace: "pre-line" }}>{evento.terms_extra}</p>}
-      <p className="muted">
-        Para evitar ser estafado, ten presente que Monarca Tickets no tiene vendedores ni promotores externos. La
-        originalidad de las entradas solo se verifica en la entrada del evento. Una vez confirmada la compra, no hay
-        reintegros de dinero, salvo cancelacion o cambio informado por el organizador.
-      </p>
-      <p className="muted">
-        Consulta las{" "}
-        <a href="/legal/condiciones" className="text-link">
-          condiciones generales, politica de privacidad y seguridad
-        </a>{" "}
-        y la{" "}
-        <a href="/legal/cancelaciones" className="text-link">
-          politica de cancelaciones y cambios
-        </a>{" "}
-        de Monarca Tickets.
-      </p>
+      <section className="event-section">
+        <h2>Terminos y condiciones</h2>
+        {evento.terms_extra && <p style={{ whiteSpace: "pre-line" }}>{evento.terms_extra}</p>}
+        <p className="muted">
+          Para evitar ser estafado, ten presente que Monarca Tickets no tiene vendedores ni promotores externos. La
+          originalidad de las entradas solo se verifica en la entrada del evento. Una vez confirmada la compra, no hay
+          reintegros de dinero, salvo cancelacion o cambio informado por el organizador.
+        </p>
+        <p className="muted" style={{ margin: 0 }}>
+          Consulta las{" "}
+          <a href="/legal/condiciones" className="text-link">
+            condiciones generales, politica de privacidad y seguridad
+          </a>{" "}
+          y la{" "}
+          <a href="/legal/cancelaciones" className="text-link">
+            politica de cancelaciones y cambios
+          </a>{" "}
+          de Monarca Tickets.
+        </p>
+      </section>
     </main>
   );
 }
