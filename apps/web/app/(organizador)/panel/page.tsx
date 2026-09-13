@@ -50,7 +50,7 @@ export default async function PanelOrganizadorPage() {
               >
                 <span>
                   <strong>{e.name}</strong>
-                  <span className="muted"> — {e.city} — {new Date(e.starts_at).toLocaleDateString("es-CO")}</span>
+                  <span className="muted"> — {e.city} — {new Date(e.starts_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}</span>
                 </span>
                 <span className={ESTADO_BADGE[e.status] ?? "badge"}>{e.status}</span>
               </Link>

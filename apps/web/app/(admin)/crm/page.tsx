@@ -185,7 +185,7 @@ export default async function CrmPage() {
             <tbody>
               {leads.map((lead) => (
                 <tr key={lead.id}>
-                  <td>{new Date(lead.created_at).toLocaleDateString("es-CO")}</td>
+                  <td>{new Date(lead.created_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}</td>
                   <td>{lead.nombre}</td>
                   <td>{lead.empresa ?? "—"}</td>
                   <td>
@@ -262,7 +262,7 @@ export default async function CrmPage() {
                 const comprador = orden.profiles as unknown as { full_name: string | null } | null;
                 return (
                   <tr key={orden.id}>
-                    <td>{new Date(orden.created_at).toLocaleString("es-CO")}</td>
+                    <td>{new Date(orden.created_at).toLocaleString("es-CO", { timeZone: "America/Bogota" })}</td>
                     <td>{evento?.name ?? "—"}</td>
                     <td>{comprador?.full_name ?? "—"}</td>
                     <td>${orden.total_cop.toLocaleString("es-CO")}</td>
@@ -309,7 +309,7 @@ export default async function CrmPage() {
                     ))}
                   </td>
                   <td>{cliente.rate_limit_per_min}</td>
-                  <td>{new Date(cliente.created_at).toLocaleDateString("es-CO")}</td>
+                  <td>{new Date(cliente.created_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}</td>
                   <td>
                     <form
                       action={async () => {

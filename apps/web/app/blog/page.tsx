@@ -30,7 +30,7 @@ export default function BlogPage() {
                 <h3>{post.titulo}</h3>
                 <p>{post.extracto}</p>
                 <p className="blog-card-meta">
-                  {new Date(post.fecha).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" })} ·{" "}
+                  {new Date(post.fecha).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric", timeZone: "America/Bogota" })} ·{" "}
                   {post.minutosLectura} min de lectura
                 </p>
               </div>

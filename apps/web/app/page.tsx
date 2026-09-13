@@ -63,6 +63,7 @@ export default async function HomePage() {
       weekday: "long",
       day: "2-digit",
       month: "long",
+      timeZone: "America/Bogota",
     }),
   }));
 
@@ -148,6 +149,7 @@ export default async function HomePage() {
                           day: "2-digit",
                           month: "short",
                           year: "numeric",
+                          timeZone: "America/Bogota",
                         })}
                       </p>
                     </div>

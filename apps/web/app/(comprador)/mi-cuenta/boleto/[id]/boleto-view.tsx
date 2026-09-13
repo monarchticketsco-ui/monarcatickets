@@ -44,9 +44,9 @@ export function BoletoView({
   const [errorDescarga, setErrorDescarga] = useState(false);
 
   const fecha = evento ? new Date(evento.starts_at) : null;
-  const dia = fecha ? fecha.toLocaleDateString("es-CO", { day: "2-digit" }) : "--";
+  const dia = fecha ? fecha.toLocaleDateString("es-CO", { day: "2-digit", timeZone: "America/Bogota" }) : "--";
   const mes = fecha
-    ? fecha.toLocaleDateString("es-CO", { month: "short" }).replace(".", "").toUpperCase()
+    ? fecha.toLocaleDateString("es-CO", { month: "short", timeZone: "America/Bogota" }).replace(".", "").toUpperCase()
     : "";
   const horaFecha = fecha
     ? fecha.toLocaleString("es-CO", {
@@ -55,6 +55,7 @@ export function BoletoView({
         month: "short",
         hour: "numeric",
         minute: "2-digit",
+        timeZone: "America/Bogota",
       })
     : "";
 

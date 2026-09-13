@@ -128,7 +128,7 @@ export default async function MiCuentaPage({
                     <h3 style={{ margin: "0 0 4px" }}>{evento?.name ?? "Evento"}</h3>
                     {evento && (
                       <p className="muted" style={{ margin: 0 }}>
-                        {evento.venue}, {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO")}
+                        {evento.venue}, {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO", { timeZone: "America/Bogota" })}
                       </p>
                     )}
                   </div>
@@ -148,7 +148,7 @@ export default async function MiCuentaPage({
 
                 <p className="muted" style={{ marginTop: 10, marginBottom: 0 }}>
                   Total: ${orden.total_cop.toLocaleString("es-CO")} · Comprado el{" "}
-                  {new Date(orden.created_at).toLocaleDateString("es-CO")}
+                  {new Date(orden.created_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}
                 </p>
 
                 {orden.status === "pagada" && totalBoletos > 0 && (

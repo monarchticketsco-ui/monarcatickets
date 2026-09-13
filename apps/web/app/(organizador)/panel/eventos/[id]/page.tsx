@@ -90,7 +90,7 @@ export default async function GestionEventoPage({
       </div>
       {error && <p role="alert">{error}</p>}
       <p className="page-lede">
-        {evento.venue} — {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO")}
+        {evento.venue} — {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO", { timeZone: "America/Bogota" })}
       </p>
 
       <h2>Informacion basica</h2>

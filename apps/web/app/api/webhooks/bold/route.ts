@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
             month: "long",
             hour: "numeric",
             minute: "2-digit",
+            timeZone: "America/Bogota",
           }),
           totalCop: ordenPagada.total_cop,
           cantidadBoletos,

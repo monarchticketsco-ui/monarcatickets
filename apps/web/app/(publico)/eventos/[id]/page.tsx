@@ -52,7 +52,7 @@ export default async function EventoPublicoPage({
   if (evento.capacity) ficha.push({ valor: `${evento.capacity}`, etiqueta: "Aforo" });
   if (evento.doors_open_at) {
     ficha.push({
-      valor: new Date(evento.doors_open_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }),
+      valor: new Date(evento.doors_open_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", timeZone: "America/Bogota" }),
       etiqueta: "Apertura de puertas",
     });
   }
@@ -96,6 +96,7 @@ export default async function EventoPublicoPage({
           {new Date(evento.starts_at).toLocaleString("es-CO", {
             dateStyle: "long",
             timeStyle: "short",
+            timeZone: "America/Bogota",
           })}
         </p>
         {evento.description && <p>{evento.description}</p>}
@@ -168,7 +169,7 @@ export default async function EventoPublicoPage({
               badgeTexto = "Etapa finalizada";
             } else if (proximamente) {
               badgeClase = "badge badge-blue";
-              badgeTexto = `Disponible desde ${new Date(t.sale_starts_at as string).toLocaleDateString("es-CO")}`;
+              badgeTexto = `Disponible desde ${new Date(t.sale_starts_at as string).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}`;
             }
 
             return (
@@ -188,9 +189,9 @@ export default async function EventoPublicoPage({
                   </p>
                   {(t.sale_starts_at || t.sale_ends_at) && (
                     <p className="muted" style={{ fontSize: "0.8rem", margin: "2px 0 0" }}>
-                      {t.sale_starts_at && `Desde ${new Date(t.sale_starts_at).toLocaleDateString("es-CO")}`}
+                      {t.sale_starts_at && `Desde ${new Date(t.sale_starts_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}`}
                       {t.sale_starts_at && t.sale_ends_at && " · "}
-                      {t.sale_ends_at && `Hasta ${new Date(t.sale_ends_at).toLocaleDateString("es-CO")}`}
+                      {t.sale_ends_at && `Hasta ${new Date(t.sale_ends_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}`}
                     </p>
                   )}
                   <span className={badgeClase}>{badgeTexto}</span>

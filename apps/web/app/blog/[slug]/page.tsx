@@ -29,7 +29,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <p className="event-card-eyebrow">{post.categoria}</p>
       <h1>{post.titulo}</h1>
       <p className="muted" style={{ marginTop: -6, marginBottom: 28 }}>
-        {new Date(post.fecha).toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" })} ·{" "}
+        {new Date(post.fecha).toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Bogota" })} ·{" "}
         {post.minutosLectura} min de lectura
       </p>
 

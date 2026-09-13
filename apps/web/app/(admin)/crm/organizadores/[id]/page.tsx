@@ -56,7 +56,7 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
         <span className={DIAN_BADGE[organizador.dian_status] ?? "badge"}>{organizador.dian_status}</span>
       </div>
       <p className="page-lede">
-        NIT {organizador.nit} · Cliente desde {new Date(organizador.created_at).toLocaleDateString("es-CO")}
+        NIT {organizador.nit} · Cliente desde {new Date(organizador.created_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}
       </p>
 
       <h2>Estado DIAN</h2>
@@ -170,7 +170,7 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
                 <tr key={e.id}>
                   <td>{e.name}</td>
                   <td>{e.city}</td>
-                  <td>{new Date(e.starts_at).toLocaleDateString("es-CO")}</td>
+                  <td>{new Date(e.starts_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}</td>
                   <td>
                     <span className={EVENTO_BADGE[e.status] ?? "badge"}>{e.status}</span>
                   </td>
