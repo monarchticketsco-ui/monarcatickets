@@ -7,9 +7,13 @@ type Asistente = { nombre: string; documento: string };
 export function ComprarBoton({
   ticketTypeId,
   disponibles,
+  precioCop,
+  ticketServiceRate,
 }: {
   ticketTypeId: string;
   disponibles: number;
+  precioCop: number;
+  ticketServiceRate: number;
 }) {
   const [paso, setPaso] = useState<"cantidad" | "asistentes">("cantidad");
   const [cantidad, setCantidad] = useState(1);
@@ -18,6 +22,9 @@ export function ComprarBoton({
   const [error, setError] = useState<string | null>(null);
 
   const maximo = Math.min(10, disponibles);
+  const subtotalCop = precioCop * cantidad;
+  const ticketServiceCop = Math.round(subtotalCop * (ticketServiceRate / 100));
+  const totalCop = subtotalCop + ticketServiceCop;
 
   function continuar() {
     setError(null);
@@ -102,6 +109,11 @@ export function ComprarBoton({
             Continuar
           </button>
         </div>
+        {ticketServiceCop > 0 && (
+          <p className="muted" style={{ fontSize: "0.78rem", margin: "6px 0 0" }}>
+            Total con Ticket Service: ${totalCop.toLocaleString("es-CO")}
+          </p>
+        )}
       </div>
     );
   }
@@ -156,6 +168,10 @@ export function ComprarBoton({
           {cargando ? "Redirigiendo a Bold..." : "Ir a pagar"}
         </button>
       </div>
+      <p className="muted" style={{ fontSize: "0.85rem", margin: "10px 0 0" }}>
+        Total a pagar{ticketServiceCop > 0 ? " (incluye Ticket Service)" : ""}: $
+        {totalCop.toLocaleString("es-CO")}
+      </p>
       {error && <p role="alert" style={{ marginTop: 10 }}>{error}</p>}
     </div>
   );

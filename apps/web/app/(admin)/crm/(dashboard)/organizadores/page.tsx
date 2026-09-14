@@ -46,7 +46,7 @@ export default async function OrganizadoresPage() {
               <tr>
                 <th>Razon social</th>
                 <th>NIT</th>
-                <th>Comision</th>
+                <th>Ticket Service</th>
                 <th>Eventos</th>
               </tr>
             </thead>

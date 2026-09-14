@@ -57,7 +57,7 @@ export default async function OrganizadorDetallePage({
 
   let ventasQuery = admin
     .from("orders")
-    .select("id, event_id, total_cop, status, created_at, profiles(full_name)")
+    .select("id, event_id, total_cop, ticket_service_cop, status, created_at, profiles(full_name)")
     .in("event_id", idsParaVentas.length ? idsParaVentas : ["00000000-0000-0000-0000-000000000000"])
     .order("created_at", { ascending: false })
     .limit(300);
@@ -67,7 +67,11 @@ export default async function OrganizadorDetallePage({
 
   const { data: ventasData } = await ventasQuery;
   const ventas = ventasData ?? [];
-  const totalPagado = ventas.filter((v) => v.status === "pagada").reduce((acc, v) => acc + v.total_cop, 0);
+  // Ingreso real del organizador: el total cobrado menos el Ticket
+  // Service, que Monarca retiene (ver migracion 0012).
+  const totalPagado = ventas
+    .filter((v) => v.status === "pagada")
+    .reduce((acc, v) => acc + (v.total_cop - v.ticket_service_cop), 0);
 
   const actualizarFichaConId = actualizarFichaOrganizador.bind(null, id);
 
@@ -85,7 +89,7 @@ export default async function OrganizadorDetallePage({
 
       <h2>Ficha del organizador</h2>
       <p className="muted" style={{ maxWidth: "60ch" }}>
-        Datos de contacto, responsable comercial y comision acordada. Solo visibles para el equipo de Monarca
+        Datos de contacto, responsable comercial y % de Ticket Service acordado. Solo visibles para el equipo de Monarca
         Tickets.
       </p>
       <div className="card" style={{ maxWidth: 620 }}>
@@ -126,7 +130,7 @@ export default async function OrganizadorDetallePage({
               />
             </div>
             <div className="field" style={{ flex: "1 1 140px" }}>
-              <label htmlFor="commission_rate">Comision (%)</label>
+              <label htmlFor="commission_rate">Ticket Service (%)</label>
               <input
                 id="commission_rate"
                 name="commission_rate"
@@ -136,6 +140,9 @@ export default async function OrganizadorDetallePage({
                 step="0.01"
                 defaultValue={organizador.commission_rate}
               />
+              <p className="muted" style={{ fontSize: "0.78rem", margin: "4px 0 0" }}>
+                Se suma al precio de cada boleto y lo paga el comprador al pagar con Bold.
+              </p>
             </div>
           </div>
           <div className="field">
@@ -186,7 +193,7 @@ export default async function OrganizadorDetallePage({
         </div>
         <div className="stat-card">
           <div className="value">${totalPagado.toLocaleString("es-CO")}</div>
-          <div className="label">Total confirmado COP</div>
+          <div className="label">Ingresos confirmados COP (sin Ticket Service)</div>
         </div>
       </div>
 

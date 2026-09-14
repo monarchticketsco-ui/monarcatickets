@@ -36,8 +36,8 @@ export default async function PanelDashboardPage({
 
   const admin = createAdminClient();
   const { data: ordenes } = eventIds.length
-    ? await admin.from("orders").select("total_cop, status").in("event_id", eventIds)
-    : { data: [] as { total_cop: number; status: string }[] };
+    ? await admin.from("orders").select("total_cop, ticket_service_cop, status").in("event_id", eventIds)
+    : { data: [] as { total_cop: number; ticket_service_cop: number; status: string }[] };
 
   const { data: ventasRecientes } = eventIds.length
     ? await admin
@@ -50,9 +50,11 @@ export default async function PanelDashboardPage({
 
   const ventasList = ventasRecientes ?? [];
 
+  // Ingreso real del organizador: el total cobrado menos el Ticket
+  // Service, que Monarca retiene (ver migracion 0012).
   const ingresosCop = (ordenes ?? [])
     .filter((o) => o.status === "pagada")
-    .reduce((acc, o) => acc + o.total_cop, 0);
+    .reduce((acc, o) => acc + (o.total_cop - o.ticket_service_cop), 0);
 
   const ahora = Date.now();
   const proximo = eventosList

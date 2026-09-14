@@ -4,6 +4,7 @@ import { requireApiClient } from "@/lib/api-auth";
 import { buscarOCrearComprador } from "@/lib/comprador-guest";
 import { crearLinkDePago, BoldError } from "@/lib/bold";
 import { validarAsistentes } from "@/lib/asistentes";
+import { calcularTotalConTicketService } from "@/lib/pricing";
 
 // Crea una orden + link de pago Bold para un comprador que no tiene
 // sesion en el sitio (ej. alguien comprando por WhatsApp). Misma logica
@@ -45,11 +46,15 @@ export async function POST(req: NextRequest) {
 
   const { data: tipo } = await admin
     .from("ticket_types")
-    .select("id, name, price_cop, event_id, events(name, status)")
+    .select("id, name, price_cop, event_id, events(name, status, organizers(commission_rate))")
     .eq("id", ticketTypeId)
     .single();
 
-  const evento = tipo?.events as unknown as { name: string; status: string } | null;
+  const evento = tipo?.events as unknown as {
+    name: string;
+    status: string;
+    organizers: { commission_rate: number } | null;
+  } | null;
 
   if (!tipo || !evento || evento.status !== "en_venta") {
     return NextResponse.json({ error: "boleto_no_disponible" }, { status: 404 });
@@ -75,11 +80,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "sin_cupo" }, { status: 409 });
   }
 
-  const totalCop = tipo.price_cop * quantity;
+  // Ticket Service (organizers.commission_rate): se suma al precio del
+  // boleto y lo paga el comprador junto con la entrada, en un solo cargo
+  // a Bold. El organizador solo recibe el subtotal (ver migracion 0012).
+  const ticketServiceRate = evento.organizers?.commission_rate ?? 0;
+  const { ticketServiceCop, totalCop } = calcularTotalConTicketService(tipo.price_cop * quantity, ticketServiceRate);
 
   const { data: orden, error: ordenError } = await admin
     .from("orders")
-    .insert({ user_id: compradorId, event_id: tipo.event_id, total_cop: totalCop, status: "pendiente" })
+    .insert({
+      user_id: compradorId,
+      event_id: tipo.event_id,
+      total_cop: totalCop,
+      ticket_service_cop: ticketServiceCop,
+      status: "pendiente",
+    })
     .select("id")
     .single();
 
@@ -114,6 +129,7 @@ export async function POST(req: NextRequest) {
       orden_id: orden.id,
       estado: "pendiente",
       total_cop: totalCop,
+      ticket_service_cop: ticketServiceCop,
       checkout_url: link.url,
     });
   } catch (e) {

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { crearLinkDePago, BoldError } from "@/lib/bold";
 import { validarAsistentes } from "@/lib/asistentes";
+import { calcularTotalConTicketService } from "@/lib/pricing";
 
 // Paso 2 del flujo de pago (blueprint Fig. 3):
 // recibe { ticketTypeId, quantity }, valida contra el cupo disponible,
@@ -42,11 +43,15 @@ export async function POST(req: NextRequest) {
 
   const { data: tipo } = await supabase
     .from("ticket_types")
-    .select("id, name, price_cop, event_id, events(name, status)")
+    .select("id, name, price_cop, event_id, events(name, status, organizers(commission_rate))")
     .eq("id", ticketTypeId)
     .single();
 
-  const evento = tipo?.events as unknown as { name: string; status: string } | null;
+  const evento = tipo?.events as unknown as {
+    name: string;
+    status: string;
+    organizers: { commission_rate: number } | null;
+  } | null;
 
   if (!tipo || !evento || !["publicado", "en_venta"].includes(evento.status)) {
     return NextResponse.json({ error: "boleto_no_disponible" }, { status: 404 });
@@ -64,11 +69,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "sin_cupo" }, { status: 409 });
   }
 
-  const totalCop = tipo.price_cop * quantity;
+  // Ticket Service (organizers.commission_rate): se suma al precio del
+  // boleto y lo paga el comprador junto con la entrada, en un solo cargo
+  // a Bold. El organizador solo recibe el subtotal (ver migracion 0012).
+  const ticketServiceRate = evento.organizers?.commission_rate ?? 0;
+  const { ticketServiceCop, totalCop } = calcularTotalConTicketService(tipo.price_cop * quantity, ticketServiceRate);
 
   const { data: orden, error: ordenError } = await admin
     .from("orders")
-    .insert({ user_id: user.id, event_id: tipo.event_id, total_cop: totalCop, status: "pendiente" })
+    .insert({
+      user_id: user.id,
+      event_id: tipo.event_id,
+      total_cop: totalCop,
+      ticket_service_cop: ticketServiceCop,
+      status: "pendiente",
+    })
     .select("id")
     .single();
 

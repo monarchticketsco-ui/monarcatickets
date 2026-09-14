@@ -18,14 +18,29 @@ export default async function PanelOrdenesPage() {
   const { data: ordenes } = eventIds.length
     ? await admin
         .from("orders")
-        .select("id, event_id, total_cop, status, created_at, profiles(full_name)")
+        .select("id, event_id, total_cop, ticket_service_cop, status, created_at, profiles(full_name)")
         .in("event_id", eventIds)
         .order("created_at", { ascending: false })
         .limit(300)
-    : { data: [] as { id: string; event_id: string; total_cop: number; status: string; created_at: string; profiles: unknown }[] };
+    : {
+        data: [] as {
+          id: string;
+          event_id: string;
+          total_cop: number;
+          ticket_service_cop: number;
+          status: string;
+          created_at: string;
+          profiles: unknown;
+        }[],
+      };
 
   const items = ordenes ?? [];
-  const totalPagado = items.filter((o) => o.status === "pagada").reduce((acc, o) => acc + o.total_cop, 0);
+  // Ingreso real del organizador: el total cobrado menos el Ticket
+  // Service, que Monarca retiene (ver migracion 0012). El "Total" de
+  // cada fila abajo si es el cobro completo que hizo Bold al comprador.
+  const totalPagado = items
+    .filter((o) => o.status === "pagada")
+    .reduce((acc, o) => acc + (o.total_cop - o.ticket_service_cop), 0);
 
   return (
     <>
@@ -39,7 +54,7 @@ export default async function PanelOrdenesPage() {
         </div>
         <div className="stat-card">
           <div className="value">${totalPagado.toLocaleString("es-CO")}</div>
-          <div className="label">Total confirmado COP</div>
+          <div className="label">Ingresos confirmados COP</div>
         </div>
       </div>
 

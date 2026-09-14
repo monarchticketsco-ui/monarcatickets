@@ -51,7 +51,7 @@ export async function crearOrganizadorAdmin(
     return { status: "error", mensaje: "Razon social, NIT y correo son obligatorios." };
   }
   if (!Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate > 100) {
-    return { status: "error", mensaje: "La comision debe ser un numero entre 0 y 100." };
+    return { status: "error", mensaje: "El Ticket Service debe ser un numero entre 0 y 100." };
   }
 
   const admin = createAdminClient();
@@ -115,8 +115,8 @@ export async function actualizarEstadoLead(
 }
 
 // ---------------------------------------------------------------------
-// Ficha CRM del organizador: contacto, responsable comercial, comision y
-// notas internas.
+// Ficha CRM del organizador: contacto, responsable comercial, % de Ticket
+// Service y notas internas.
 // ---------------------------------------------------------------------
 export async function actualizarFichaOrganizador(organizerId: string, formData: FormData) {
   await requireAdmin();

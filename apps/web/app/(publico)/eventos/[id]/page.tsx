@@ -58,7 +58,7 @@ export default async function EventoPublicoPage({
   const { data: evento } = await supabase
     .from("events")
     .select(
-      "id, name, description, venue, city, starts_at, status, category, image_url, banner_url, doors_open_at, min_age, seating_type, capacity, food_sale, alcohol_sale, wheelchair_accessible, pregnant_allowed, venue_address, lineup, pulep_code, responsable_razon_social, responsable_nit, responsable_direccion, responsable_email, terms_extra"
+      "id, name, description, venue, city, starts_at, status, category, image_url, banner_url, doors_open_at, min_age, seating_type, capacity, food_sale, alcohol_sale, wheelchair_accessible, pregnant_allowed, venue_address, lineup, pulep_code, responsable_razon_social, responsable_nit, responsable_direccion, responsable_email, terms_extra, organizers(commission_rate)"
     )
     .eq("id", id)
     .in("status", ["publicado", "en_venta"])
@@ -116,6 +116,10 @@ export default async function EventoPublicoPage({
   const tieneLegal = tieneResponsable || evento.pulep_code;
 
   const zonas = tiposDeBoleto ? agruparPorLocalidad(tiposDeBoleto) : [];
+  // Ticket Service: % que se suma al precio del boleto al pagar (ver
+  // lib/pricing.ts / migracion 0012). Se pasa a ComprarBoton para que
+  // muestre el total real antes de redirigir a Bold.
+  const ticketServiceRate = (evento.organizers as unknown as { commission_rate: number } | null)?.commission_rate ?? 0;
 
   return (
     <main className="container">
@@ -246,7 +250,10 @@ export default async function EventoPublicoPage({
                         return (
                           <tr key={t.id} className={!comprable ? "ticket-row-inactiva" : undefined}>
                             <td>{t.etapa || "Precio unico"}</td>
-                            <td className="price-cell">${t.price_cop.toLocaleString("es-CO")}</td>
+                            <td className="price-cell">
+                              <div>${t.price_cop.toLocaleString("es-CO")}</div>
+                              <div className="price-fee-note">+ Ticket Service</div>
+                            </td>
                             <td className="muted">
                               {t.sale_starts_at || t.sale_ends_at ? (
                                 <>
@@ -272,7 +279,14 @@ export default async function EventoPublicoPage({
                               <span className={badgeClase}>{badgeTexto}</span>
                             </td>
                             <td className="ticket-action-cell">
-                              {comprable && <ComprarBoton ticketTypeId={t.id} disponibles={disponibles} />}
+                              {comprable && (
+                                <ComprarBoton
+                                  ticketTypeId={t.id}
+                                  disponibles={disponibles}
+                                  precioCop={t.price_cop}
+                                  ticketServiceRate={ticketServiceRate}
+                                />
+                              )}
                             </td>
                           </tr>
                         );

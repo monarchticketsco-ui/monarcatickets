@@ -75,8 +75,11 @@ export function CrearOrganizadorForm({
             <input id="commercial_owner" name="commercial_owner" type="text" placeholder="Nombre del asesor" />
           </div>
           <div className="field" style={{ flex: "1 1 140px" }}>
-            <label htmlFor="commission_rate">Comision (%)</label>
+            <label htmlFor="commission_rate">Ticket Service (%)</label>
             <input id="commission_rate" name="commission_rate" type="number" min={0} max={100} step="0.01" defaultValue={10} />
+            <p className="muted" style={{ fontSize: "0.78rem", margin: "4px 0 0" }}>
+              Se suma al precio de cada boleto y lo paga el comprador al pagar con Bold.
+            </p>
           </div>
         </div>
         <button type="submit" className="btn btn-primary" disabled={pending}>

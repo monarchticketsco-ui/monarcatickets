@@ -1358,6 +1358,15 @@ tbody tr:hover {
   font-variant-numeric: tabular-nums;
 }
 
+.price-fee-note {
+  font-family: var(--font-body, inherit);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
 .ticket-action-cell {
   white-space: normal;
   min-width: 190px;
