@@ -12,9 +12,22 @@ const EVENTO_BADGE: Record<string, string> = {
   cancelado: "badge badge-danger",
 };
 
-export default async function OrganizadorDetallePage({ params }: { params: Promise<{ id: string }> }) {
+const ORDEN_BADGE: Record<string, string> = {
+  pendiente: "badge badge-warning",
+  pagada: "badge badge-green",
+  fallida: "badge badge-danger",
+};
+
+export default async function OrganizadorDetallePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ eventId?: string; desde?: string; hasta?: string }>;
+}) {
   await requireAdmin();
   const { id } = await params;
+  const { eventId, desde, hasta } = await searchParams;
   const admin = createAdminClient();
 
   const { data: organizador } = await admin
@@ -32,6 +45,29 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
     .select("id, name, city, starts_at, status")
     .eq("organizer_id", id)
     .order("starts_at", { ascending: false });
+
+  const eventosList = eventos ?? [];
+  const eventIds = eventosList.map((e) => e.id);
+  const eventosMap = new Map(eventosList.map((e) => [e.id, e.name]));
+
+  // El evento del filtro solo cuenta si de verdad es de este organizador.
+  const eventoFiltro = eventId && eventIds.includes(eventId) ? eventId : undefined;
+  const idsParaVentas = eventoFiltro ? [eventoFiltro] : eventIds;
+  const hayFiltrosVentas = Boolean(eventoFiltro || desde || hasta);
+
+  let ventasQuery = admin
+    .from("orders")
+    .select("id, event_id, total_cop, status, created_at, profiles(full_name)")
+    .in("event_id", idsParaVentas.length ? idsParaVentas : ["00000000-0000-0000-0000-000000000000"])
+    .order("created_at", { ascending: false })
+    .limit(300);
+
+  if (desde) ventasQuery = ventasQuery.gte("created_at", `${desde}T00:00:00`);
+  if (hasta) ventasQuery = ventasQuery.lte("created_at", `${hasta}T23:59:59`);
+
+  const { data: ventasData } = await ventasQuery;
+  const ventas = ventasData ?? [];
+  const totalPagado = ventas.filter((v) => v.status === "pagada").reduce((acc, v) => acc + v.total_cop, 0);
 
   const actualizarFichaConId = actualizarFichaOrganizador.bind(null, id);
 
@@ -112,8 +148,88 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
         </form>
       </div>
 
+      <h2>Ventas realizadas</h2>
+      <form className="form-row" style={{ marginBottom: 20, flexWrap: "wrap" }}>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label htmlFor="eventId">Evento</label>
+          <select id="eventId" name="eventId" defaultValue={eventoFiltro ?? ""} style={{ minWidth: 200 }}>
+            <option value="">Todos los eventos</option>
+            {eventosList.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label htmlFor="desde">Desde</label>
+          <input id="desde" name="desde" type="date" defaultValue={desde ?? ""} />
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label htmlFor="hasta">Hasta</label>
+          <input id="hasta" name="hasta" type="date" defaultValue={hasta ?? ""} />
+        </div>
+        <button type="submit" className="btn btn-secondary" style={{ alignSelf: "flex-end" }}>
+          Filtrar
+        </button>
+        {hayFiltrosVentas && (
+          <Link href={`/crm/organizadores/${id}`} className="nav-link" style={{ alignSelf: "flex-end", padding: "10px 0" }}>
+            Limpiar filtros
+          </Link>
+        )}
+      </form>
+
+      <div className="stat-grid">
+        <div className="stat-card">
+          <div className="value">{ventas.length}</div>
+          <div className="label">Ventas {hayFiltrosVentas ? "(filtradas)" : ""}</div>
+        </div>
+        <div className="stat-card">
+          <div className="value">${totalPagado.toLocaleString("es-CO")}</div>
+          <div className="label">Total confirmado COP</div>
+        </div>
+      </div>
+
+      {eventosList.length === 0 ? (
+        <p className="empty-state">Este organizador todavia no tiene eventos.</p>
+      ) : ventas.length === 0 ? (
+        <p className="empty-state">
+          {hayFiltrosVentas ? "No hay ventas con esos filtros." : "Todavia no hay ventas para este organizador."}
+        </p>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Evento</th>
+                <th>Comprador</th>
+                <th>Total</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ventas.map((v) => {
+                const comprador = v.profiles as unknown as { full_name: string | null } | null;
+                return (
+                  <tr key={v.id}>
+                    <td>{new Date(v.created_at).toLocaleString("es-CO", { timeZone: "America/Bogota" })}</td>
+                    <td>{eventosMap.get(v.event_id) ?? "—"}</td>
+                    <td>{comprador?.full_name ?? "—"}</td>
+                    <td>${v.total_cop.toLocaleString("es-CO")}</td>
+                    <td>
+                      <span className={ORDEN_BADGE[v.status] ?? "badge"}>{v.status}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <h2>Eventos</h2>
-      {!eventos || eventos.length === 0 ? (
+      {eventosList.length === 0 ? (
         <p className="empty-state">Este organizador todavia no tiene eventos.</p>
       ) : (
         <div className="table-wrap">
@@ -128,7 +244,7 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
               </tr>
             </thead>
             <tbody>
-              {eventos.map((e) => (
+              {eventosList.map((e) => (
                 <tr key={e.id}>
                   <td>{e.name}</td>
                   <td>{e.city}</td>
