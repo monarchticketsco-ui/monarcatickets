@@ -13,7 +13,7 @@ export async function requireOrganizer() {
 
   const { data: organizer } = await supabase
     .from("organizers")
-    .select("id, legal_name, nit, dian_status, commission_rate")
+    .select("id, legal_name, nit, commission_rate")
     .eq("owner_user_id", user.id)
     .single();
 

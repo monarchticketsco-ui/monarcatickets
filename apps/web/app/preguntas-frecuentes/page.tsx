@@ -27,11 +27,11 @@ const PREGUNTAS = [
   },
   {
     q: "¿Cómo recibo la factura de mi compra?",
-    a: "La factura electrónica es emitida por el organizador del evento una vez esté habilitado ante la DIAN para facturación electrónica.",
+    a: "La factura electrónica es emitida directamente por el organizador del evento, responsable de su propia facturación ante la DIAN.",
   },
   {
     q: "¿Cómo publico mi propio evento en Monarca Tickets?",
-    a: "Crea una cuenta de organizador desde /signup, completa tu perfil y espera a que tu estado ante la DIAN quede habilitado; luego podrás crear eventos y ponerlos en venta desde tu panel.",
+    a: "Escríbenos desde /empresas para crear tu cuenta de organizador. Una vez tengas acceso, completas tu perfil y puedes crear y publicar tus eventos desde tu panel.",
   },
   {
     q: "¿Es seguro comprar en Monarca Tickets?",

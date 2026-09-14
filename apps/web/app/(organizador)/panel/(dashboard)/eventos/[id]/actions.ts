@@ -167,15 +167,7 @@ export async function actualizarBanner(eventId: string, formData: FormData) {
 }
 
 export async function publicarEvento(eventId: string) {
-  const { supabase, organizer } = await requireOrganizer();
-
-  if (organizer.dian_status !== "habilitado") {
-    redirect(
-      `/panel/eventos/${eventId}?error=${encodeURIComponent(
-        "Tu perfil de organizador debe estar habilitado ante la DIAN antes de poner boletos en venta. El equipo de Monarca Tickets revisa y activa este estado desde el CRM."
-      )}`
-    );
-  }
+  const { supabase } = await requireOrganizer();
 
   const { error } = await supabase
     .from("events")

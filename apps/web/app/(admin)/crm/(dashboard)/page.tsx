@@ -14,7 +14,12 @@ const LEAD_BADGE: Record<string, string> = {
   descartado: "badge",
 };
 
-export default async function CrmDashboardPage() {
+export default async function CrmDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ passwordActualizada?: string }>;
+}) {
+  const { passwordActualizada } = await searchParams;
   const { supabase } = await requireAdmin();
 
   const [
@@ -57,6 +62,11 @@ export default async function CrmDashboardPage() {
     <>
       <h1>Dashboard</h1>
       <p className="page-lede">Resumen general de Monarca Tickets.</p>
+      {passwordActualizada && (
+        <p className="alert-success" role="status">
+          Tu contraseña se actualizo correctamente.
+        </p>
+      )}
 
       <div className="stat-grid">
         <div className="stat-card">

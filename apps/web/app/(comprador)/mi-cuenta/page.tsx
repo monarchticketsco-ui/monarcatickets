@@ -43,9 +43,9 @@ type OrdenConTickets = {
 export default async function MiCuentaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; passwordActualizada?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, passwordActualizada } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -90,6 +90,11 @@ export default async function MiCuentaPage({
     <main className="container">
       <h1>Mi cuenta</h1>
       {error && <p role="alert">{error}</p>}
+      {passwordActualizada && (
+        <p className="alert-success" role="status">
+          Tu contraseña se actualizo correctamente.
+        </p>
+      )}
 
       <h2>Perfil</h2>
       <div className="card" style={{ maxWidth: 440 }}>
@@ -109,6 +114,16 @@ export default async function MiCuentaPage({
             Guardar
           </button>
         </form>
+      </div>
+
+      <h2>Seguridad</h2>
+      <div className="card" style={{ maxWidth: 440 }}>
+        <p className="muted" style={{ marginTop: 0, marginBottom: 12 }}>
+          Cambia la contraseña con la que ingresas a tu cuenta.
+        </p>
+        <Link href="/cuenta/contrasena" className="btn btn-secondary">
+          Cambiar contraseña
+        </Link>
       </div>
 
       <h2>Mis compras</h2>

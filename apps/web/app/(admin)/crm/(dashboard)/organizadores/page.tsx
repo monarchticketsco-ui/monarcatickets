@@ -1,15 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
-import { actualizarDianStatus } from "../actions";
 import { actualizarEstadoLead } from "./actions";
-
-const ESTADOS_DIAN = ["no_habilitado", "en_proceso", "habilitado"] as const;
-
-const DIAN_BADGE: Record<string, string> = {
-  no_habilitado: "badge badge-danger",
-  en_proceso: "badge badge-warning",
-  habilitado: "badge badge-green",
-};
 
 const LEAD_BADGE: Record<string, string> = {
   nuevo: "badge badge-blue",
@@ -24,7 +15,7 @@ export default async function OrganizadoresPage() {
   const [organizersRes, leadsRes] = await Promise.all([
     supabase
       .from("organizers")
-      .select("id, legal_name, nit, dian_status, commission_rate, events(count)")
+      .select("id, legal_name, nit, commission_rate, events(count)")
       .order("legal_name", { ascending: true }),
     supabase
       .from("empresa_leads")
@@ -44,7 +35,7 @@ export default async function OrganizadoresPage() {
           + Crear cuenta de empresa
         </Link>
       </div>
-      <p className="page-lede">Empresas con acceso al portal empresas y su estado de habilitacion DIAN.</p>
+      <p className="page-lede">Empresas con acceso al portal empresas.</p>
 
       {organizadores.length === 0 ? (
         <p className="empty-state">Todavia no hay organizadores registrados.</p>
@@ -57,8 +48,6 @@ export default async function OrganizadoresPage() {
                 <th>NIT</th>
                 <th>Comision</th>
                 <th>Eventos</th>
-                <th title="Habilitacion ante la DIAN para facturar electronicamente">Estado DIAN</th>
-                <th>Cambiar estado</th>
               </tr>
             </thead>
             <tbody>
@@ -74,33 +63,6 @@ export default async function OrganizadoresPage() {
                     <td>{o.nit}</td>
                     <td>{o.commission_rate}%</td>
                     <td>{totalEventos}</td>
-                    <td>
-                      <span className={DIAN_BADGE[o.dian_status] ?? "badge"}>{o.dian_status}</span>
-                    </td>
-                    <td>
-                      <form
-                        action={async (formData: FormData) => {
-                          "use server";
-                          const nuevoEstado = String(formData.get("dian_status")) as
-                            | "no_habilitado"
-                            | "en_proceso"
-                            | "habilitado";
-                          await actualizarDianStatus(o.id, nuevoEstado);
-                        }}
-                        style={{ display: "flex", gap: 8 }}
-                      >
-                        <select name="dian_status" defaultValue={o.dian_status} style={{ minWidth: 140 }}>
-                          {ESTADOS_DIAN.map((estado) => (
-                            <option key={estado} value={estado}>
-                              {estado}
-                            </option>
-                          ))}
-                        </select>
-                        <button type="submit" className="btn btn-secondary btn-sm">
-                          Guardar
-                        </button>
-                      </form>
-                    </td>
                   </tr>
                 );
               })}

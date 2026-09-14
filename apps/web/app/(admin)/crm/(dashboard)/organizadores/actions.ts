@@ -116,8 +116,7 @@ export async function actualizarEstadoLead(
 
 // ---------------------------------------------------------------------
 // Ficha CRM del organizador: contacto, responsable comercial, comision y
-// notas internas. dian_status se sigue manejando aparte (actions.ts en
-// /crm) porque ya tenia su propio flujo en la tabla principal.
+// notas internas.
 // ---------------------------------------------------------------------
 export async function actualizarFichaOrganizador(organizerId: string, formData: FormData) {
   await requireAdmin();

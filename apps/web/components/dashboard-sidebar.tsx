@@ -60,6 +60,12 @@ const ICONS = {
       <path d="M15 16l4-4-4-4M19 12H9" />
     </svg>
   ),
+  password: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="15" r="4" />
+      <path d="M11 12l9-9M17 3l3 3M14 6l2.5 2.5" />
+    </svg>
+  ),
 } as const;
 
 type IconKey = keyof typeof ICONS;
@@ -102,6 +108,10 @@ export function DashboardSidebar({ role, titulo }: { role: "admin" | "organizado
         })}
       </nav>
       <div className="dashboard-sidebar-foot">
+        <Link href="/cuenta/contrasena" className="dashboard-nav-link">
+          {ICONS.password}
+          <span className="label-text">Cambiar contraseña</span>
+        </Link>
         <Link href="/" className="dashboard-nav-link">
           {ICONS.home}
           <span className="label-text">Volver al sitio</span>

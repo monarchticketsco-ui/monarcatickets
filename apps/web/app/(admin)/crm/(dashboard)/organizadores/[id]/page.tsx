@@ -2,16 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { actualizarDianStatus } from "../../actions";
 import { actualizarFichaOrganizador } from "../actions";
-
-const ESTADOS_DIAN = ["no_habilitado", "en_proceso", "habilitado"] as const;
-
-const DIAN_BADGE: Record<string, string> = {
-  no_habilitado: "badge badge-danger",
-  en_proceso: "badge badge-warning",
-  habilitado: "badge badge-green",
-};
 
 const EVENTO_BADGE: Record<string, string> = {
   borrador: "badge",
@@ -29,7 +20,7 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
   const { data: organizador } = await admin
     .from("organizers")
     .select(
-      "id, legal_name, nit, dian_status, commission_rate, contact_name, contact_phone, contact_email, commercial_owner, notas, created_at"
+      "id, legal_name, nit, commission_rate, contact_name, contact_phone, contact_email, commercial_owner, notas, created_at"
     )
     .eq("id", id)
     .single();
@@ -51,43 +42,10 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
           ← Volver al CRM
         </Link>
       </p>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <h1 style={{ marginBottom: 0 }}>{organizador.legal_name}</h1>
-        <span className={DIAN_BADGE[organizador.dian_status] ?? "badge"}>{organizador.dian_status}</span>
-      </div>
+      <h1 style={{ marginBottom: 0 }}>{organizador.legal_name}</h1>
       <p className="page-lede">
         NIT {organizador.nit} · Cliente desde {new Date(organizador.created_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}
       </p>
-
-      <h2>Estado DIAN</h2>
-      <p className="muted" style={{ maxWidth: "60ch", marginTop: -8 }}>
-        Habilitacion del organizador ante la DIAN para facturar electronicamente en Colombia. Mientras no este
-        &quot;habilitado&quot;, no puede publicar boletos en venta.
-      </p>
-      <div className="card" style={{ maxWidth: 420 }}>
-        <form
-          action={async (formData: FormData) => {
-            "use server";
-            const nuevoEstado = String(formData.get("dian_status")) as
-              | "no_habilitado"
-              | "en_proceso"
-              | "habilitado";
-            await actualizarDianStatus(id, nuevoEstado);
-          }}
-          style={{ display: "flex", gap: 8 }}
-        >
-          <select name="dian_status" defaultValue={organizador.dian_status} style={{ minWidth: 160 }}>
-            {ESTADOS_DIAN.map((estado) => (
-              <option key={estado} value={estado}>
-                {estado}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="btn btn-secondary btn-sm">
-            Guardar
-          </button>
-        </form>
-      </div>
 
       <h2>Ficha del organizador</h2>
       <p className="muted" style={{ maxWidth: "60ch" }}>

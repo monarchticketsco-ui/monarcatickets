@@ -23,6 +23,11 @@ export default async function LoginPage({
             <label htmlFor="password">Contraseña</label>
             <input id="password" name="password" type="password" required />
           </div>
+          <p style={{ margin: "-8px 0 4px" }}>
+            <a href="/recuperar-password" className="nav-link" style={{ padding: 0, fontSize: "0.88rem" }}>
+              ¿Olvidaste tu contraseña?
+            </a>
+          </p>
           {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} action="login" />}
           <button type="submit" className="btn btn-primary">
             Ingresar

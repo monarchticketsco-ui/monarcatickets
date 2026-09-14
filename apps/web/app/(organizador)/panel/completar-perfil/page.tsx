@@ -1,9 +1,7 @@
 import { crearOrganizador } from "./actions";
 
 // Paso previo a usar el panel: crea la fila en `organizers` que conecta
-// al usuario con sus eventos. dian_status queda en 'no_habilitado' por
-// defecto — bloquea la publicacion de eventos hasta que se resuelva
-// (blueprint seccion 05).
+// al usuario con sus eventos.
 export default async function CompletarPerfilPage({
   searchParams,
 }: {

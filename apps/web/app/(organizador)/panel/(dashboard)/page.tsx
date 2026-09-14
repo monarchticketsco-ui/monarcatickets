@@ -2,12 +2,6 @@ import Link from "next/link";
 import { requireOrganizer } from "@/lib/organizer";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const DIAN_BADGE: Record<string, string> = {
-  no_habilitado: "badge badge-danger",
-  en_proceso: "badge badge-warning",
-  habilitado: "badge badge-green",
-};
-
 const ESTADO_BADGE: Record<string, string> = {
   borrador: "badge",
   publicado: "badge badge-blue",
@@ -22,7 +16,12 @@ const ORDEN_BADGE: Record<string, string> = {
   fallida: "badge badge-danger",
 };
 
-export default async function PanelDashboardPage() {
+export default async function PanelDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ passwordActualizada?: string }>;
+}) {
+  const { passwordActualizada } = await searchParams;
   const { supabase, organizer } = await requireOrganizer();
 
   const { data: eventos } = await supabase
@@ -68,11 +67,11 @@ export default async function PanelDashboardPage() {
           + Crear evento
         </Link>
       </div>
-      <p className="muted">
-        Estado DIAN (habilitacion para facturar electronicamente):{" "}
-        <span className={DIAN_BADGE[organizer.dian_status] ?? "badge"}>{organizer.dian_status}</span>
-        {organizer.dian_status !== "habilitado" && " — no vas a poder publicar boletos en venta hasta habilitarte."}
-      </p>
+      {passwordActualizada && (
+        <p className="alert-success" role="status">
+          Tu contraseña se actualizo correctamente.
+        </p>
+      )}
 
       <div className="stat-grid">
         <div className="stat-card">

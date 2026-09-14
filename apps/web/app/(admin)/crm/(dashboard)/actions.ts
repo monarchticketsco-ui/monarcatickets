@@ -10,25 +10,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // negocio del CRM se hacen con la service role key una vez requireAdmin()
 // confirmo la sesion y el rol contra la fila propia del usuario (eso si
 // respeta RLS: profiles_select_own_or_admin).
-export async function actualizarDianStatus(
-  organizerId: string,
-  nuevoEstado: "no_habilitado" | "en_proceso" | "habilitado"
-) {
-  await requireAdmin();
-
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("organizers")
-    .update({ dian_status: nuevoEstado })
-    .eq("id", organizerId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/crm", "layout");
-}
-
 // ---------------------------------------------------------------------
 // Credenciales de API (api_clients) — modulo del CRM para que el admin
 // genere y revoque llaves de integradores externos (ej. el bot de
