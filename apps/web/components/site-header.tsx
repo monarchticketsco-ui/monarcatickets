@@ -26,7 +26,7 @@ export async function SiteHeader() {
           <Image src="/logo.png" alt="Monarca Tickets" width={152} height={32} priority />
         </Link>
         <Link href="/" className="brand-icon" aria-label="Monarca Tickets — inicio">
-          <Image src="/logo-icon.png" alt="" width={44} height={28} priority />
+          <Image src="/logo-icon.png" alt="" width={35} height={28} priority />
         </Link>
         <MobileNavToggle>
           <Link href="/eventos" className="nav-link">
