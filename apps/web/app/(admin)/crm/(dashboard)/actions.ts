@@ -26,7 +26,7 @@ export async function actualizarDianStatus(
     throw new Error(error.message);
   }
 
-  revalidatePath("/crm");
+  revalidatePath("/crm", "layout");
 }
 
 // ---------------------------------------------------------------------
@@ -77,7 +77,7 @@ export async function crearApiCliente(
     return { status: "error", mensaje: error.message };
   }
 
-  revalidatePath("/crm");
+  revalidatePath("/crm", "layout");
   return { status: "ok", companyName, apiKey: rawKey, scopes };
 }
 
@@ -91,5 +91,5 @@ export async function revocarApiCliente(clientId: string) {
     throw new Error(error.message);
   }
 
-  revalidatePath("/crm");
+  revalidatePath("/crm", "layout");
 }

@@ -11,7 +11,7 @@ export default async function NuevoOrganizadorPage({
   const { nombre, empresa, correo, telefono, leadId } = await searchParams;
 
   return (
-    <main className="container">
+    <>
       <p>
         <Link href="/crm" className="nav-link" style={{ padding: 0 }}>
           ← Volver al CRM
@@ -31,6 +31,6 @@ export default async function NuevoOrganizadorPage({
           leadId: leadId ?? "",
         }}
       />
-    </main>
+    </>
   );
 }

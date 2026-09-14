@@ -1,21 +1,17 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/admin";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireOrganizer } from "@/lib/organizer";
 import { imagenDeEvento, CATEGORIAS } from "@/lib/event-visuals";
 import {
-  actualizarBannerAdmin,
-  actualizarCoreAdmin,
-  actualizarDetallesAdmin,
-  actualizarEstadoAdmin,
-  actualizarImagenAdmin,
-  actualizarTipoDeBoletoAdmin,
-  crearTipoDeBoletoAdmin,
-  eliminarImagenLocalidadAdmin,
-  subirImagenLocalidadAdmin,
+  actualizarBanner,
+  actualizarCore,
+  actualizarDetalles,
+  actualizarImagen,
+  actualizarTipoDeBoleto,
+  crearTipoDeBoleto,
+  eliminarImagenLocalidad,
+  publicarEvento,
+  subirImagenLocalidad,
 } from "./actions";
-
-const ESTADOS_EVENTO = ["borrador", "publicado", "en_venta", "finalizado", "cancelado"] as const;
 
 const ESTADO_BADGE: Record<string, string> = {
   borrador: "badge",
@@ -27,6 +23,7 @@ const ESTADO_BADGE: Record<string, string> = {
 
 function inputDateTimeLocal(value: string | null): string {
   if (!value) return "";
+  // <input type="datetime-local"> espera "YYYY-MM-DDTHH:mm" en hora local.
   const d = new Date(value);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -42,59 +39,51 @@ function selectSiNo(name: string, actual: boolean | null) {
   );
 }
 
-export default async function EventoAdminPage({
+export default async function GestionEventoPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
-  await requireAdmin();
   const { id } = await params;
   const { error } = await searchParams;
-  const admin = createAdminClient();
+  const { supabase, organizer } = await requireOrganizer();
 
-  const { data: evento } = await admin
+  const { data: evento } = await supabase
     .from("events")
     .select(
-      "id, name, venue, city, category, starts_at, ends_at, status, image_url, banner_url, organizer_id, doors_open_at, min_age, seating_type, capacity, food_sale, alcohol_sale, wheelchair_accessible, pregnant_allowed, venue_address, lineup, pulep_code, responsable_razon_social, responsable_nit, responsable_direccion, responsable_email, terms_extra, organizers(id, legal_name)"
+      "id, name, venue, city, category, starts_at, ends_at, status, image_url, banner_url, doors_open_at, min_age, seating_type, capacity, food_sale, alcohol_sale, wheelchair_accessible, pregnant_allowed, venue_address, lineup, pulep_code, responsable_razon_social, responsable_nit, responsable_direccion, responsable_email, terms_extra"
     )
     .eq("id", id)
+    .eq("organizer_id", organizer.id)
     .single();
 
   if (!evento) notFound();
 
-  const organizador = evento.organizers as unknown as { id: string; legal_name: string } | null;
+  const [{ data: tiposDeBoleto }, { data: imagenesLocalidad }] = await Promise.all([
+    supabase
+      .from("ticket_types")
+      .select("id, name, price_cop, capacity, sold_count, etapa, sale_starts_at, sale_ends_at")
+      .eq("event_id", id)
+      .order("price_cop", { ascending: false }),
+    supabase
+      .from("event_location_images")
+      .select("id, image_url")
+      .eq("event_id", id)
+      .order("created_at", { ascending: true }),
+  ]);
 
-  const { data: tiposDeBoleto } = await admin
-    .from("ticket_types")
-    .select("id, name, price_cop, capacity, sold_count, etapa, sale_starts_at, sale_ends_at")
-    .eq("event_id", id)
-    .order("price_cop", { ascending: false });
-
-  const { data: imagenesLocalidad } = await admin
-    .from("event_location_images")
-    .select("id, image_url")
-    .eq("event_id", id)
-    .order("created_at", { ascending: true });
-
-  const actualizarCoreConId = actualizarCoreAdmin.bind(null, id);
-  const actualizarEstadoConId = actualizarEstadoAdmin.bind(null, id);
-  const actualizarImagenConId = actualizarImagenAdmin.bind(null, id);
-  const actualizarBannerConId = actualizarBannerAdmin.bind(null, id);
-  const actualizarDetallesConId = actualizarDetallesAdmin.bind(null, id);
-  const crearTipoDeBoletoConId = crearTipoDeBoletoAdmin.bind(null, id);
-  const subirImagenLocalidadConId = subirImagenLocalidadAdmin.bind(null, id);
+  const actualizarCoreConId = actualizarCore.bind(null, id);
+  const crearTipoDeBoletoConId = crearTipoDeBoleto.bind(null, id);
+  const publicarEventoConId = publicarEvento.bind(null, id);
+  const actualizarImagenConId = actualizarImagen.bind(null, id);
+  const actualizarBannerConId = actualizarBanner.bind(null, id);
+  const actualizarDetallesConId = actualizarDetalles.bind(null, id);
+  const subirImagenLocalidadConId = subirImagenLocalidad.bind(null, id);
 
   return (
-    <main className="container">
-      {organizador && (
-        <p>
-          <Link href={`/crm/organizadores/${organizador.id}`} className="nav-link" style={{ padding: 0 }}>
-            ← {organizador.legal_name}
-          </Link>
-        </p>
-      )}
+    <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <h1 style={{ marginBottom: 0 }}>{evento.name}</h1>
         <span className={ESTADO_BADGE[evento.status] ?? "badge"}>{evento.status}</span>
@@ -103,22 +92,6 @@ export default async function EventoAdminPage({
       <p className="page-lede">
         {evento.venue} — {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO", { timeZone: "America/Bogota" })}
       </p>
-
-      <h2>Estado del evento</h2>
-      <div className="card" style={{ maxWidth: 420 }}>
-        <form action={actualizarEstadoConId} style={{ display: "flex", gap: 8 }}>
-          <select name="status" defaultValue={evento.status} style={{ minWidth: 160 }}>
-            {ESTADOS_EVENTO.map((estado) => (
-              <option key={estado} value={estado}>
-                {estado}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="btn btn-secondary btn-sm">
-            Guardar
-          </button>
-        </form>
-      </div>
 
       <h2>Informacion basica</h2>
       <div className="card" style={{ maxWidth: 620 }}>
@@ -174,8 +147,8 @@ export default async function EventoAdminPage({
 
       <h2>Imagen de portada</h2>
       <p className="muted" style={{ maxWidth: "60ch" }}>
-        Se ve en las tarjetas del listado de /eventos y como respaldo del banner. Tamano recomendado:{" "}
-        <strong>1600×1000 px</strong> (proporcion 16:10).
+        Es la foto que se ve en las tarjetas del listado de /eventos y como respaldo en la pagina del evento si no
+        subes un banner. Tamano recomendado: <strong>1600×1000 px</strong> (proporcion 16:10).
       </p>
       <div className="card" style={{ maxWidth: 480, display: "flex", gap: 16, flexWrap: "wrap" }}>
         <img
@@ -187,6 +160,9 @@ export default async function EventoAdminPage({
           <div className="field">
             <label htmlFor="image_url">URL de imagen</label>
             <input id="image_url" name="image_url" type="url" placeholder="https://..." defaultValue={evento.image_url ?? ""} />
+            <p className="muted" style={{ fontSize: "0.82rem", margin: "2px 0 0" }}>
+              Vacio = usamos una foto segun la categoria.
+            </p>
           </div>
           <button type="submit" className="btn btn-secondary btn-sm">
             Guardar imagen
@@ -196,8 +172,8 @@ export default async function EventoAdminPage({
 
       <h2>Banner ancho (cabecera de la pagina del evento)</h2>
       <p className="muted" style={{ maxWidth: "60ch" }}>
-        Afiche o pieza grafica del evento, se muestra arriba de todo en la pagina publica. Tamano recomendado:{" "}
-        <strong>1920×840 px</strong> (proporcion ~16:7). Vacio = usamos la portada.
+        Se muestra arriba de todo en la pagina publica del evento (el afiche o pieza grafica del evento). Tamano
+        recomendado: <strong>1920×840 px</strong> (proporcion ~16:7). Si lo dejas vacio usamos la imagen de portada.
       </p>
       <div className="card" style={{ maxWidth: 480, display: "flex", gap: 16, flexWrap: "wrap" }}>
         {evento.banner_url && (
@@ -218,37 +194,19 @@ export default async function EventoAdminPage({
         </form>
       </div>
 
-      <h2>Imagenes de localidades y zonas</h2>
-      <p className="muted" style={{ maxWidth: "60ch" }}>
-        Fotos o mapas de las localidades/zonas del venue. Tamano recomendado: <strong>1080×1080 px</strong>.
-      </p>
-      {imagenesLocalidad && imagenesLocalidad.length > 0 && (
-        <div className="gallery-grid">
-          {imagenesLocalidad.map((img) => (
-            <div className="gallery-item" key={img.id}>
-              <img src={img.image_url} alt="" />
-              <form action={eliminarImagenLocalidadAdmin.bind(null, img.id, id)}>
-                <button type="submit" className="btn btn-secondary btn-sm">
-                  Eliminar
-                </button>
-              </form>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="card" style={{ maxWidth: 420 }}>
-        <form action={subirImagenLocalidadConId} className="form" encType="multipart/form-data">
-          <div className="field">
-            <label htmlFor="imagen">Subir imagen (1080x1080 recomendado)</label>
-            <input id="imagen" name="imagen" type="file" accept="image/*" required />
-          </div>
-          <button type="submit" className="btn btn-secondary btn-sm">
-            Subir imagen
+      {evento.status === "borrador" && (
+        <form action={publicarEventoConId} style={{ marginBottom: 8 }}>
+          <button type="submit" className="btn btn-primary">
+            Publicar (pasar a en venta)
           </button>
         </form>
-      </div>
+      )}
 
       <h2>Detalles del evento</h2>
+      <p className="muted" style={{ maxWidth: "60ch" }}>
+        Esta informacion aparece en la pagina publica del evento (ficha tecnica, ubicacion y datos legales). Todo es
+        opcional, pero entre mas completo, mas confianza le da al comprador.
+      </p>
       <div className="card" style={{ maxWidth: 620 }}>
         <form action={actualizarDetallesConId} className="form" style={{ maxWidth: "none" }}>
           <fieldset>
@@ -308,8 +266,16 @@ export default async function EventoAdminPage({
             <legend>Ubicacion y artistas</legend>
             <div className="field">
               <label htmlFor="venue_address">Direccion exacta del venue</label>
-              <input id="venue_address" name="venue_address" type="text" defaultValue={evento.venue_address ?? ""} />
+              <input
+                id="venue_address"
+                name="venue_address"
+                type="text"
+                placeholder="Cra. 44 #48-18, barrio..."
+                defaultValue={evento.venue_address ?? ""}
+              />
               <p className="muted" style={{ fontSize: "0.82rem", margin: "2px 0 0" }}>
+                Se usa para el mapa en la pagina del evento. Si la dejas vacia, el mapa busca por el nombre del venue
+                y la ciudad.{" "}
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                     [evento.venue, evento.venue_address, evento.city, "Colombia"].filter(Boolean).join(", ")
@@ -332,7 +298,7 @@ export default async function EventoAdminPage({
             <legend>Cumplimiento legal (PULEP)</legend>
             <div className="field">
               <label htmlFor="pulep_code">Codigo PULEP</label>
-              <input id="pulep_code" name="pulep_code" type="text" defaultValue={evento.pulep_code ?? ""} />
+              <input id="pulep_code" name="pulep_code" type="text" placeholder="Ej. VCR550" defaultValue={evento.pulep_code ?? ""} />
             </div>
             <div className="field">
               <label htmlFor="responsable_razon_social">Razon social del responsable</label>
@@ -360,7 +326,12 @@ export default async function EventoAdminPage({
             </div>
             <div className="field">
               <label htmlFor="responsable_email">Correo de contacto / notificaciones</label>
-              <input id="responsable_email" name="responsable_email" type="email" defaultValue={evento.responsable_email ?? ""} />
+              <input
+                id="responsable_email"
+                name="responsable_email"
+                type="email"
+                defaultValue={evento.responsable_email ?? ""}
+              />
             </div>
           </fieldset>
 
@@ -368,7 +339,13 @@ export default async function EventoAdminPage({
             <legend>Terminos especificos del evento (opcional)</legend>
             <div className="field">
               <label htmlFor="terms_extra">Terminos y condiciones adicionales</label>
-              <textarea id="terms_extra" name="terms_extra" rows={3} defaultValue={evento.terms_extra ?? ""} />
+              <textarea
+                id="terms_extra"
+                name="terms_extra"
+                rows={3}
+                placeholder="Reglas propias del evento, ademas de las condiciones generales de Monarca Tickets."
+                defaultValue={evento.terms_extra ?? ""}
+              />
             </div>
           </fieldset>
 
@@ -378,13 +355,47 @@ export default async function EventoAdminPage({
         </form>
       </div>
 
+      <h2>Imagenes de localidades y zonas</h2>
+      <p className="muted" style={{ maxWidth: "60ch" }}>
+        Sube fotos o mapas de las localidades/zonas del venue (recomendado 1080x1080 px). Se muestran en la pagina
+        publica del evento para que el comprador sepa donde queda cada zona.
+      </p>
+      {imagenesLocalidad && imagenesLocalidad.length > 0 && (
+        <div className="gallery-grid">
+          {imagenesLocalidad.map((img) => (
+            <div className="gallery-item" key={img.id}>
+              <img src={img.image_url} alt="" />
+              <form action={eliminarImagenLocalidad.bind(null, img.id, id)}>
+                <button type="submit" className="btn btn-secondary btn-sm">
+                  Eliminar
+                </button>
+              </form>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="card" style={{ maxWidth: 420 }}>
+        <form action={subirImagenLocalidadConId} className="form" encType="multipart/form-data">
+          <div className="field">
+            <label htmlFor="imagen">Subir imagen (1080x1080 recomendado)</label>
+            <input id="imagen" name="imagen" type="file" accept="image/*" required />
+          </div>
+          <button type="submit" className="btn btn-secondary btn-sm">
+            Subir imagen
+          </button>
+        </form>
+      </div>
+
       <h2>Localidades y precios (tipos de boleto)</h2>
       <p className="muted" style={{ maxWidth: "60ch" }}>
-        Si el mismo lugar tiene varias etapas de precio (preventa, etapa 2...), crea una fila por etapa con el
-        mismo nombre y sus fechas de venta.
+        Puedes agregar mas localidades cuando quieras, y editar el nombre, precio o aforo de cada una. El aforo no
+        se puede bajar por debajo de los boletos que ya se vendieron. Si el mismo lugar tiene varias etapas de
+        precio (ej. preventa y luego un precio mas alto), crea una fila por etapa con el mismo nombre y las fechas
+        de venta correspondientes: cuando una etapa se acaba (por fecha o por aforo), la siguiente queda disponible
+        y la anterior se marca como finalizada en la pagina publica.
       </p>
       {!tiposDeBoleto || tiposDeBoleto.length === 0 ? (
-        <p className="empty-state">Este evento todavia no tiene tipos de boleto.</p>
+        <p className="empty-state">Todavia no has agregado tipos de boleto.</p>
       ) : (
         <div className="table-wrap">
           <table>
@@ -405,10 +416,17 @@ export default async function EventoAdminPage({
                 <tr key={t.id}>
                   <td colSpan={8} style={{ padding: 0 }}>
                     <form
-                      action={actualizarTipoDeBoletoAdmin.bind(null, id, t.id)}
+                      action={actualizarTipoDeBoleto.bind(null, id, t.id)}
                       style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", flexWrap: "wrap" }}
                     >
-                      <input name="name" type="text" defaultValue={t.name} required style={{ maxWidth: 160 }} aria-label="Nombre" />
+                      <input
+                        name="name"
+                        type="text"
+                        defaultValue={t.name}
+                        required
+                        style={{ maxWidth: 160 }}
+                        aria-label="Nombre"
+                      />
                       <input
                         name="etapa"
                         type="text"
@@ -496,6 +514,6 @@ export default async function EventoAdminPage({
           </button>
         </form>
       </div>
-    </main>
+    </>
   );
 }

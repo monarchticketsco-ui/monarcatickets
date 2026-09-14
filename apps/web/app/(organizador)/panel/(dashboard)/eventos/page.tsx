@@ -9,13 +9,7 @@ const ESTADO_BADGE: Record<string, string> = {
   cancelado: "badge badge-danger",
 };
 
-const DIAN_BADGE: Record<string, string> = {
-  no_habilitado: "badge badge-danger",
-  en_proceso: "badge badge-warning",
-  habilitado: "badge badge-green",
-};
-
-export default async function PanelOrganizadorPage() {
+export default async function PanelEventosPage() {
   const { supabase, organizer } = await requireOrganizer();
 
   const { data: eventos } = await supabase
@@ -25,19 +19,13 @@ export default async function PanelOrganizadorPage() {
     .order("starts_at", { ascending: false });
 
   return (
-    <main className="container">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 8 }}>
-        <h1 style={{ marginBottom: 0 }}>{organizer.legal_name}</h1>
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+        <h1 style={{ marginBottom: 0 }}>Mis eventos</h1>
         <Link href="/panel/eventos/nuevo" className="btn btn-primary">
           + Crear evento
         </Link>
       </div>
-      <p className="muted">
-        Estado DIAN: <span className={DIAN_BADGE[organizer.dian_status] ?? "badge"}>{organizer.dian_status}</span>
-        {organizer.dian_status !== "habilitado" && " — no vas a poder publicar boletos en venta hasta habilitarte."}
-      </p>
-
-      <h2>Tus eventos</h2>
       {!eventos || eventos.length === 0 ? (
         <p className="empty-state">Todavia no has creado ningun evento.</p>
       ) : (
@@ -58,6 +46,6 @@ export default async function PanelOrganizadorPage() {
           ))}
         </ul>
       )}
-    </main>
+    </>
   );
 }

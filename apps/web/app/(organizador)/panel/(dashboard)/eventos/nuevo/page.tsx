@@ -9,7 +9,7 @@ export default async function NuevoEventoPage({
   const { error } = await searchParams;
 
   return (
-    <main className="container">
+    <>
       <h1>Crear evento</h1>
       {error && <p role="alert">{error}</p>}
       <div className="card" style={{ maxWidth: 480 }}>
@@ -53,6 +53,6 @@ export default async function NuevoEventoPage({
           </button>
         </form>
       </div>
-    </main>
+    </>
   );
 }

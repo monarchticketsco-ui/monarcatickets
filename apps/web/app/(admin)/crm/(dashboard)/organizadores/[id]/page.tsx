@@ -45,7 +45,7 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
   const actualizarFichaConId = actualizarFichaOrganizador.bind(null, id);
 
   return (
-    <main className="container">
+    <>
       <p>
         <Link href="/crm" className="nav-link" style={{ padding: 0 }}>
           ← Volver al CRM
@@ -185,6 +185,6 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
           </table>
         </div>
       )}
-    </main>
+    </>
   );
 }

@@ -90,7 +90,7 @@ export async function crearOrganizadorAdmin(
     await admin.from("empresa_leads").update({ estado: "convertido" }).eq("id", leadId);
   }
 
-  revalidatePath("/crm");
+  revalidatePath("/crm", "layout");
   return { status: "ok", correo, password, legalName };
 }
 
@@ -111,7 +111,7 @@ export async function actualizarEstadoLead(
     throw new Error(error.message);
   }
 
-  revalidatePath("/crm");
+  revalidatePath("/crm", "layout");
 }
 
 // ---------------------------------------------------------------------
@@ -151,5 +151,5 @@ export async function actualizarFichaOrganizador(organizerId: string, formData: 
   }
 
   revalidatePath(`/crm/organizadores/${organizerId}`);
-  revalidatePath("/crm");
+  revalidatePath("/crm", "layout");
 }
