@@ -57,7 +57,7 @@ export default async function OrganizadoresPage() {
                 <th>NIT</th>
                 <th>Comision</th>
                 <th>Eventos</th>
-                <th>Estado DIAN</th>
+                <th title="Habilitacion ante la DIAN para facturar electronicamente">Estado DIAN</th>
                 <th>Cambiar estado</th>
               </tr>
             </thead>

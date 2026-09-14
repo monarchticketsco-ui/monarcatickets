@@ -60,6 +60,10 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
       </p>
 
       <h2>Estado DIAN</h2>
+      <p className="muted" style={{ maxWidth: "60ch", marginTop: -8 }}>
+        Habilitacion del organizador ante la DIAN para facturar electronicamente en Colombia. Mientras no este
+        &quot;habilitado&quot;, no puede publicar boletos en venta.
+      </p>
       <div className="card" style={{ maxWidth: 420 }}>
         <form
           action={async (formData: FormData) => {
