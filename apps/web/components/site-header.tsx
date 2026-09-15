@@ -32,6 +32,9 @@ export async function SiteHeader() {
           <Link href="/eventos" className="nav-link">
             Eventos
           </Link>
+          <Link href="/calendario-fourvenues" className="nav-link">
+            Calendario
+          </Link>
           <Link href="/soporte" className="nav-link">
             Soporte
           </Link>
