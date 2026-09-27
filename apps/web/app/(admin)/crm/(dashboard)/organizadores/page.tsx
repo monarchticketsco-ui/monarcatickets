@@ -30,7 +30,7 @@ export default async function OrganizadoresPage() {
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-        <h1 style={{ marginBottom: 0 }}>Organizadores</h1>
+        <h1 style={{ marginBottom: 0 }}>Polinizadores</h1>
         <Link href="/crm/organizadores/nuevo" className="btn btn-primary btn-sm">
           + Crear cuenta de empresa
         </Link>

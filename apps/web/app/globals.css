@@ -2258,6 +2258,29 @@ tr.ticket-row-inactiva:hover {
   border-radius: var(--radius-lg);
   padding: 18px 12px;
   margin: 24px 0;
+  /* Scroll propio e independiente del contenido: con mas modulos en el
+     menu (Management), la lista puede ser mas alta que el viewport --
+     sin esto, los ultimos enlaces (Soporte, Configuracion, Volver al
+     sitio) quedan inalcanzables en pantallas cortas. */
+  max-height: calc(100vh - 90px - 24px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.dashboard-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dashboard-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
 }
 
 .dashboard-sidebar-title {

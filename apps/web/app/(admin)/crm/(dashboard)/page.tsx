@@ -111,7 +111,7 @@ export default async function CrmDashboardPage({
 
       <form className="form-row" style={{ marginBottom: 20, flexWrap: "wrap" }}>
         <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="organizerId">Organizador</label>
+          <label htmlFor="organizerId">Polinizador</label>
           <select id="organizerId" name="organizerId" defaultValue={organizerId ?? ""} style={{ minWidth: 180 }}>
             <option value="">Todos</option>
             {(organizadoresOpciones ?? []).map((o) => (
@@ -157,7 +157,7 @@ export default async function CrmDashboardPage({
       <div className="stat-grid">
         <div className="stat-card">
           <div className="value">{organizadoresCount ?? 0}</div>
-          <div className="label">Organizadores</div>
+          <div className="label">Polinizadores</div>
         </div>
         <div className="stat-card">
           <div className="value">{eventosList.length}</div>
