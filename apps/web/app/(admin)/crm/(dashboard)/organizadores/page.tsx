@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { actualizarEstadoLead } from "./actions";
+import { AdminDrawer, DrawerDetail } from "@/components/admin-drawer";
 
 const LEAD_BADGE: Record<string, string> = {
   nuevo: "badge badge-blue",
@@ -15,7 +16,9 @@ export default async function OrganizadoresPage() {
   const [organizersRes, leadsRes] = await Promise.all([
     supabase
       .from("organizers")
-      .select("id, legal_name, nit, commission_rate, events(count)")
+      .select(
+        "id, legal_name, nit, commission_rate, contact_name, contact_email, contact_phone, events(count)"
+      )
       .order("legal_name", { ascending: true }),
     supabase
       .from("empresa_leads")
@@ -48,6 +51,7 @@ export default async function OrganizadoresPage() {
                 <th>NIT</th>
                 <th>Ticket Service</th>
                 <th>Eventos</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -63,6 +67,24 @@ export default async function OrganizadoresPage() {
                     <td>{o.nit}</td>
                     <td>{o.commission_rate}%</td>
                     <td>{totalEventos}</td>
+                    <td>
+                      <AdminDrawer eyebrow="POLINIZADOR" title={o.legal_name}>
+                        <DrawerDetail label="NIT" value={o.nit} />
+                        <DrawerDetail label="Contacto" value={o.contact_name || "—"} />
+                        <DrawerDetail label="Correo" value={o.contact_email || "—"} />
+                        <DrawerDetail label="Telefono" value={o.contact_phone || "—"} />
+                        <DrawerDetail label="Ticket Service" value={`${o.commission_rate}%`} />
+                        <DrawerDetail label="Eventos activos" value={totalEventos} />
+                        <div className="actions">
+                          <Link href={`/crm/organizadores/${o.id}`} className="btn btn-primary btn-sm">
+                            Ver ficha completa
+                          </Link>
+                          <Link href={`/crm/organizadores/${o.id}#eventos`} className="btn btn-secondary btn-sm">
+                            Ver eventos
+                          </Link>
+                        </div>
+                      </AdminDrawer>
+                    </td>
                   </tr>
                 );
               })}
