@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { HeroCarousel } from "@/components/hero-carousel";
 import { EventSearchBar } from "@/components/event-search-bar";
 import { Reveal } from "@/components/reveal";
 import { imagenDeEvento } from "@/lib/event-visuals";
 import { BLOG_POSTS } from "@/lib/blog-posts";
+import { getFourvenuesEvents } from "@/lib/fourvenues";
 
 const CATEGORIAS_HOME = [
   {
@@ -46,31 +46,43 @@ function hashString(input: string): number {
   return Math.abs(hash);
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
-  const supabase = await createClient();
+  // Catalogo en vivo desde FourVenues (Channel Manager API) -- igual que
+  // /eventos, esta pagina dejo de leer la tabla local `events`. FourVenues
+  // no tiene concepto de "categoria", por eso queda siempre en null (el
+  // filtro de /eventos?categoria=X tampoco filtra por ahora, ver esa
+  // pagina).
+  const eventosFV = await getFourvenuesEvents().catch(() => []);
 
-  const { data: eventos } = await supabase
-    .from("events")
-    .select("id, name, venue, city, starts_at, category, image_url")
-    .in("status", ["publicado", "en_venta"])
-    .order("starts_at", { ascending: true })
-    .limit(30);
-
-  const todos = eventos ?? [];
-  const conFecha = todos.map((e) => ({
-    ...e,
-    fecha: new Date(e.starts_at).toLocaleDateString("es-CO", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      timeZone: "America/Bogota",
-    }),
+  const todos = eventosFV.map((e) => ({
+    id: e.slug,
+    name: e.name,
+    venue: e.location?.name ?? "",
+    city: e.location?.city ?? "",
+    starts_at: e.start_date,
+    category: null as string | null,
+    image_url: e.image_url || null,
   }));
+
+  const conFecha = todos
+    .filter((e) => new Date(e.starts_at).getTime() >= Date.now())
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
+    .map((e) => ({
+      ...e,
+      fecha: new Date(e.starts_at).toLocaleDateString("es-CO", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        timeZone: "America/Bogota",
+      }),
+    }));
 
   const destacados = conFecha.slice(0, 6);
   const recomendados = [...conFecha].sort((a, b) => hashString(a.id) - hashString(b.id)).slice(0, 4);
   const proximos = conFecha.slice(0, 20);
-  const ciudades = Array.from(new Set(todos.map((e) => e.city))).sort();
+  const ciudades = Array.from(new Set(todos.map((e) => e.city).filter(Boolean))).sort();
 
   return (
     <main className="home-sections">

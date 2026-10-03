@@ -3,14 +3,14 @@ import { whatsappLink } from "@/lib/whatsapp";
 import { EmpresaLeadForm } from "./lead-form";
 
 export const metadata = {
-  title: "Portal empresas — Monarca Tickets",
+  title: "Conviértete en Polinizador — Monarca Tickets",
   description: "Vende boletos para tus eventos en Colombia con Monarca Tickets: pago seguro, control de aforo real y todo lo que exige la ley.",
 };
 
 const BENEFICIOS = [
   {
-    titulo: "Pagos seguros con Bold",
-    texto: "Cobra en línea con tarjeta, PSE y más. El dinero de tus ventas queda liquidado directo a tu cuenta.",
+    titulo: "Pagos seguros en línea",
+    texto: "Cobra con tarjeta, PSE, Nequi y más, con pasarela certificada. El dinero de tus ventas queda liquidado directo a tu cuenta.",
     icon: (
       <path d="M3 8h18M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Zm4 7h4" />
     ),
@@ -45,11 +45,11 @@ export default function EmpresasPage() {
   return (
     <main className="container">
       <div className="portal-hero">
-        <p className="event-card-eyebrow">Portal empresas</p>
-        <h1>Vende los boletos de tu evento con Monarca Tickets</h1>
+        <p className="event-card-eyebrow">Monarca para organizadores</p>
+        <h1>Conviértete en un Polinizador</h1>
         <p className="page-lede">
-          Cuentanos de tu evento y nuestro equipo crea tu cuenta de empresa. Tú te encargas de la experiencia,
-          nosotros del cobro, el aforo y los boletos digitales.
+          Tú creas la experiencia. Monarca te da el ecosistema para venderla: cobro en línea, control de aforo real
+          y boletos digitales, todo desde tu propio panel.
         </p>
       </div>
 
