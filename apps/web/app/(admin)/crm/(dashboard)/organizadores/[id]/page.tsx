@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { actualizarFichaOrganizador } from "../actions";
+import { getFourvenuesEventById } from "@/lib/fourvenues";
 
 const EVENTO_BADGE: Record<string, string> = {
   borrador: "badge",
@@ -33,12 +34,16 @@ export default async function OrganizadorDetallePage({
   const { data: organizador } = await admin
     .from("organizers")
     .select(
-      "id, legal_name, nit, commission_rate, contact_name, contact_phone, contact_email, commercial_owner, notas, created_at"
+      "id, legal_name, nit, commission_rate, contact_name, contact_phone, contact_email, commercial_owner, notas, created_at, fourvenues_event_id"
     )
     .eq("id", id)
     .single();
 
   if (!organizador) notFound();
+
+  const eventoAsignado = organizador.fourvenues_event_id
+    ? await getFourvenuesEventById(organizador.fourvenues_event_id)
+    : null;
 
   const { data: eventos } = await admin
     .from("events")
@@ -144,6 +149,24 @@ export default async function OrganizadorDetallePage({
                 Se suma al precio de cada boleto y lo paga el comprador al pagar con Bold.
               </p>
             </div>
+          </div>
+          <div className="field">
+            <label htmlFor="fourvenues_event_id">Evento de FourVenues asignado (Panel Polinizador)</label>
+            <input
+              id="fourvenues_event_id"
+              name="fourvenues_event_id"
+              type="text"
+              placeholder="ID del evento en FourVenues (ej. gss0259prb0doouygcgf7y2rdc1q6prm)"
+              defaultValue={organizador.fourvenues_event_id ?? ""}
+            />
+            <p className="muted" style={{ fontSize: "0.78rem", margin: "4px 0 0" }}>
+              {eventoAsignado
+                ? `Evento actual: ${eventoAsignado.name} (${eventoAsignado.slug}).`
+                : organizador.fourvenues_event_id
+                  ? "No se encontro ese evento en FourVenues — revisa el ID."
+                  : "Sin evento asignado todavia: el Panel Polinizador de este organizador mostrara un aviso."}
+              {" "}El ID se copia de FourVenues (Management lo asigna, uno por organizador por ahora).
+            </p>
           </div>
           <div className="field">
             <label htmlFor="notas">Notas internas</label>

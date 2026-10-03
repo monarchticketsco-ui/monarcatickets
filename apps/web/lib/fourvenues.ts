@@ -105,6 +105,15 @@ export async function getFourvenuesEventBySlug(slug: string): Promise<FVEvent | 
   }
 }
 
+/** Detalle de un evento por su _id de FourVenues — usado por el Panel Polinizador (el organizador tiene un unico evento asignado por Management, ver organizers.fourvenues_event_id). */
+export async function getFourvenuesEventById(id: string): Promise<FVEvent | null> {
+  try {
+    return await fvFetch<FVEvent>(`/events/${encodeURIComponent(id)}?populate=ticket-rates`);
+  } catch {
+    return null;
+  }
+}
+
 export type FVCheckoutTicket = {
   price_id: string;
   full_name: string;
@@ -157,6 +166,24 @@ export type FVTicket = {
   entry_time: string | null;
 };
 
+/** Todos los tickets de un evento especifico (pagina de a 200; la mayoria de eventos de Monarca no pasan de eso, pero paginamos por si acaso). Usado por el Panel Polinizador (Ventas & Tickets, Asistentes). */
+export async function getFourvenuesTicketsByEvent(eventId: string): Promise<FVTicket[]> {
+  const tickets: FVTicket[] = [];
+  let offset = 0;
+  const limit = 200;
+
+  for (;;) {
+    const pagina = await fvFetch<FVTicket[]>(
+      `/tickets?event_id=${encodeURIComponent(eventId)}&limit=${limit}&offset=${offset}`
+    ).catch(() => [] as FVTicket[]);
+    tickets.push(...pagina);
+    if (pagina.length < limit) break;
+    offset += limit;
+  }
+
+  return tickets;
+}
+
 /**
  * FourVenues no tiene concepto de "cuenta Monarca": no existe un endpoint
  * para buscar boletos por email directamente (GET /tickets exige
@@ -164,28 +191,37 @@ export type FVTicket = {
  * eventos y filtramos los boletos de cada uno por email del comprador.
  * Con pocos eventos simultaneos esto es rapido; si el catalogo crece
  * mucho convendria acotar a eventos futuros o cachear.
+ *
+ * `/events` solo lista eventos vigentes/en venta: un evento que ya paso
+ * desaparece de ahi aunque la persona si haya comprado boleto. Por eso
+ * este helper acepta `extraEventIds` (por ejemplo, los eventos que
+ * Management ya asigno a algun organizador en `organizers.fourvenues_event_id`)
+ * para que el historial no pierda boletos de eventos finalizados.
  */
 export async function getFourvenuesTicketsByEmail(
-  email: string
+  email: string,
+  extraEventIds: string[] = []
 ): Promise<{ ticket: FVTicket; event: FVEvent }[]> {
   const correo = email.trim().toLowerCase();
   if (!correo) return [];
 
-  const eventos = await getFourvenuesEvents().catch(() => [] as FVEvent[]);
+  const eventosVigentes = await getFourvenuesEvents().catch(() => [] as FVEvent[]);
+  const idsVigentes = new Set(eventosVigentes.map((e) => e._id));
+  const idsExtra = [...new Set(extraEventIds)].filter((id) => id && !idsVigentes.has(id));
+
+  const eventosExtra = (
+    await Promise.all(idsExtra.map((id) => getFourvenuesEventById(id)))
+  ).filter((e): e is FVEvent => e !== null);
+
+  const eventos = [...eventosVigentes, ...eventosExtra];
   if (eventos.length === 0) return [];
 
   const resultados = await Promise.all(
     eventos.map(async (evento) => {
-      try {
-        const tickets = await fvFetch<FVTicket[]>(
-          `/tickets?event_id=${encodeURIComponent(evento._id)}&limit=200`
-        );
-        return tickets
-          .filter((t) => t.email?.trim().toLowerCase() === correo)
-          .map((ticket) => ({ ticket, event: evento }));
-      } catch {
-        return [];
-      }
+      const tickets = await getFourvenuesTicketsByEvent(evento._id);
+      return tickets
+        .filter((t) => t.email?.trim().toLowerCase() === correo)
+        .map((ticket) => ({ ticket, event: evento }));
     })
   );
 

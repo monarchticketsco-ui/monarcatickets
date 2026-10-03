@@ -79,6 +79,32 @@ const ICONS = {
       <path d="M11 12l9-9M17 3l3 3M14 6l2.5 2.5" />
     </svg>
   ),
+  acceso: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 8V5a1 1 0 0 1 1-1h3M4 16v3a1 1 0 0 0 1 1h3M20 8V5a1 1 0 0 0-1-1h-3M20 16v3a1 1 0 0 1-1 1h-3" />
+      <circle cx="12" cy="12" r="2.3" />
+    </svg>
+  ),
+  red: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="6" r="2" />
+      <circle cx="18" cy="6" r="2" />
+      <circle cx="12" cy="18" r="2" />
+      <path d="M7.6 7.2 10.6 16M16.4 7.2 13.4 16M8 6h8" />
+    </svg>
+  ),
+  megafono: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 10v4h3l8 4V6l-8 4H3Z" />
+      <path d="M19 9a4 4 0 0 1 0 6" />
+    </svg>
+  ),
+  grafica: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20V10M10 20V4M16 20v-7" />
+      <path d="M3 20h18" />
+    </svg>
+  ),
 } as const;
 
 type IconKey = keyof typeof ICONS;
@@ -94,9 +120,16 @@ const NAV: Record<"admin" | "organizador" | "comprador", { href: string; label: 
     { href: "/crm/integraciones", label: "Integraciones", icon: "integraciones" },
   ],
   organizador: [
-    { href: "/panel", label: "Dashboard", icon: "dashboard", exact: true },
-    { href: "/panel/eventos", label: "Mis eventos", icon: "eventos" },
-    { href: "/panel/ordenes", label: "Ordenes de venta", icon: "ordenes" },
+    { href: "/panel", label: "Resumen", icon: "dashboard", exact: true },
+    { href: "/panel/mi-evento", label: "Mi evento", icon: "eventos" },
+    { href: "/panel/ventas", label: "Ventas & Tickets", icon: "ticket" },
+    { href: "/panel/liquidaciones", label: "Liquidaciones", icon: "ordenes" },
+    { href: "/panel/asistentes", label: "Asistentes", icon: "clientes" },
+    { href: "/panel/accesos", label: "Accesos", icon: "acceso" },
+    { href: "/panel/cashless", label: "Cashless", icon: "wallet" },
+    { href: "/panel/rrpp", label: "RRPP & Canales", icon: "red" },
+    { href: "/panel/crm", label: "CRM & Marketing", icon: "megafono" },
+    { href: "/panel/reportes", label: "Reportes", icon: "grafica" },
   ],
   comprador: [
     { href: "/mi-cuenta", label: "Resumen", icon: "dashboard", exact: true },

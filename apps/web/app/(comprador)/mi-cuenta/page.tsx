@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireComprador } from "@/lib/admin";
+import { requireComprador, getEventosAsignados } from "@/lib/admin";
 import { getFourvenuesTicketsByEmail } from "@/lib/fourvenues";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,10 @@ export default async function MiCuentaResumenPage() {
 
   const { data: perfil } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
 
-  const entradas = user.email ? await getFourvenuesTicketsByEmail(user.email).catch(() => []) : [];
+  const eventosAsignados = await getEventosAsignados().catch(() => [] as string[]);
+  const entradas = user.email
+    ? await getFourvenuesTicketsByEmail(user.email, eventosAsignados).catch(() => [])
+    : [];
 
   const ahora = Date.now();
   const proximas = entradas

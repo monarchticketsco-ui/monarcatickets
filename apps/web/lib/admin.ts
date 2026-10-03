@@ -32,3 +32,21 @@ export async function requireComprador() {
 
   return { supabase, user };
 }
+
+// Lista de eventos de FourVenues que ya tienen un organizador asignado
+// (ver organizers.fourvenues_event_id). Se usa para que "Mis entradas"
+// encuentre boletos de eventos que ya terminaron y por eso no aparecen
+// en el catalogo publico de FourVenues. Requiere el cliente admin porque
+// RLS solo deja ver el propio organizador.
+export async function getEventosAsignados(): Promise<string[]> {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("organizers")
+    .select("fourvenues_event_id")
+    .not("fourvenues_event_id", "is", null);
+
+  return (data ?? [])
+    .map((o) => o.fourvenues_event_id)
+    .filter((id): id is string => Boolean(id));
+}

@@ -129,6 +129,7 @@ export async function actualizarFichaOrganizador(organizerId: string, formData: 
   const commercialOwner = String(formData.get("commercial_owner") || "").trim();
   const commissionRaw = String(formData.get("commission_rate") || "").trim();
   const notas = String(formData.get("notas") || "").trim();
+  const fourvenuesEventId = String(formData.get("fourvenues_event_id") || "").trim();
 
   const admin = createAdminClient();
   const { error } = await admin
@@ -142,6 +143,7 @@ export async function actualizarFichaOrganizador(organizerId: string, formData: 
       commercial_owner: commercialOwner || null,
       commission_rate: commissionRaw === "" ? undefined : Number(commissionRaw),
       notas: notas || null,
+      fourvenues_event_id: fourvenuesEventId || null,
     })
     .eq("id", organizerId);
 
