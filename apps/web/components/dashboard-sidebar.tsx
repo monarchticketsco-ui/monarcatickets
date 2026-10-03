@@ -42,6 +42,19 @@ const ICONS = {
       <path d="M12 10.4v.1M12 8.6c0-.9.7-1.2 1-1.4.5-.3.9-.6.9-1.2 0-.8-.8-1.3-1.7-1.3-.7 0-1.3.3-1.7.9" />
     </svg>
   ),
+  ticket: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1.3a1.7 1.7 0 0 0 0 3.4V15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.3a1.7 1.7 0 0 0 0-3.4V9Z" />
+      <path d="M14 7v10" strokeDasharray="2.2 2.2" />
+    </svg>
+  ),
+  wallet: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="6" width="17" height="13" rx="2.2" />
+      <path d="M3.5 10.5h17" />
+      <circle cx="16.5" cy="14.5" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  ),
   integraciones: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 3v4M15 3v4M6 7h12l-1 4a5 5 0 0 1-10 0L6 7Z" />
@@ -70,7 +83,7 @@ const ICONS = {
 
 type IconKey = keyof typeof ICONS;
 
-const NAV: Record<"admin" | "organizador", { href: string; label: string; icon: IconKey; exact?: boolean }[]> = {
+const NAV: Record<"admin" | "organizador" | "comprador", { href: string; label: string; icon: IconKey; exact?: boolean }[]> = {
   admin: [
     { href: "/crm", label: "Dashboard", icon: "dashboard", exact: true },
     { href: "/crm/clientes", label: "Clientes", icon: "clientes" },
@@ -85,9 +98,15 @@ const NAV: Record<"admin" | "organizador", { href: string; label: string; icon: 
     { href: "/panel/eventos", label: "Mis eventos", icon: "eventos" },
     { href: "/panel/ordenes", label: "Ordenes de venta", icon: "ordenes" },
   ],
+  comprador: [
+    { href: "/mi-cuenta", label: "Resumen", icon: "dashboard", exact: true },
+    { href: "/mi-cuenta/entradas", label: "Mis entradas", icon: "ticket" },
+    { href: "/mi-cuenta/cashless", label: "Cashless", icon: "wallet" },
+    { href: "/mi-cuenta/perfil", label: "Perfil", icon: "clientes" },
+  ],
 };
 
-export function DashboardSidebar({ role, titulo }: { role: "admin" | "organizador"; titulo: string }) {
+export function DashboardSidebar({ role, titulo }: { role: "admin" | "organizador" | "comprador"; titulo: string }) {
   const pathname = usePathname();
   const items = NAV[role];
 

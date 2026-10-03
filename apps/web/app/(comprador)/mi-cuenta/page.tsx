@@ -1,237 +1,76 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import QRCode from "qrcode";
-import { createClient } from "@/lib/supabase/server";
-import { actualizarPerfil } from "./actions";
+import { requireComprador } from "@/lib/admin";
+import { getFourvenuesTicketsByEmail } from "@/lib/fourvenues";
 
-const ESTADO_LABEL: Record<string, string> = {
-  pendiente: "Pendiente de pago",
-  pagada: "Pagada",
-  fallida: "Fallida",
-  reembolsada: "Reembolsada",
-};
+export const dynamic = "force-dynamic";
 
-const ESTADO_BADGE: Record<string, string> = {
-  pendiente: "badge badge-warning",
-  pagada: "badge badge-green",
-  fallida: "badge badge-danger",
-  reembolsada: "badge",
-};
+export default async function MiCuentaResumenPage() {
+  const { supabase, user } = await requireComprador();
 
-const TICKET_ESTADO_LABEL: Record<string, string> = {
-  valido: "Valido",
-  usado: "Usado",
-  cancelado: "Cancelado",
-  transferido: "Transferido",
-};
+  const { data: perfil } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
 
-type OrdenConTickets = {
-  id: string;
-  total_cop: number;
-  status: string;
-  created_at: string;
-  events: { name: string; venue: string; city: string; starts_at: string } | null;
-  order_items: {
-    id: string;
-    quantity: number;
-    unit_price_cop: number;
-    ticket_types: { name: string } | null;
-    tickets: { id: string; qr_signed: string; status: string; holder_name: string | null; holder_document: string | null }[];
-  }[];
-};
+  const entradas = user.email ? await getFourvenuesTicketsByEmail(user.email).catch(() => []) : [];
 
-export default async function MiCuentaPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; passwordActualizada?: string }>;
-}) {
-  const { error, passwordActualizada } = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const ahora = Date.now();
+  const proximas = entradas
+    .filter((e) => new Date(e.event.start_date).getTime() >= ahora)
+    .sort((a, b) => new Date(a.event.start_date).getTime() - new Date(b.event.start_date).getTime());
 
-  if (!user) redirect("/login");
+  const proximoEvento = proximas[0]?.event;
+  const entradasProximoEvento = proximas.filter((e) => e.event._id === proximoEvento?._id);
 
-  const { data: perfil } = await supabase
-    .from("profiles")
-    .select("full_name, phone, role")
-    .eq("id", user.id)
-    .single();
-
-  const { data: ordenesData } = await supabase
-    .from("orders")
-    .select(
-      "id, total_cop, status, created_at, events(name, venue, city, starts_at), order_items(id, quantity, unit_price_cop, ticket_types(name), tickets(id, qr_signed, status, holder_name, holder_document))"
-    )
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  const ordenes = (ordenesData ?? []) as unknown as OrdenConTickets[];
-
-  // Los QR se generan como data URL en el servidor (no hace falta guardar
-  // archivos): cada boleto pagado obtiene la suya, indexada por id de
-  // boleto, para pintarlas mas abajo sin volver a tocar la base de datos.
-  const idsBoletos = ordenes.flatMap((orden) => orden.order_items.flatMap((item) => item.tickets.map((t) => t.id)));
-  const qrPorBoleto = new Map<string, string>();
-  await Promise.all(
-    ordenes.flatMap((orden) =>
-      orden.order_items.flatMap((item) =>
-        item.tickets.map(async (ticket) => {
-          const dataUrl = await QRCode.toDataURL(ticket.qr_signed, { margin: 1, width: 220 });
-          qrPorBoleto.set(ticket.id, dataUrl);
-        })
-      )
-    )
-  );
-  void idsBoletos; // solo documenta la forma de qrPorBoleto, no se usa directo
+  const nombre = perfil?.full_name?.trim().split(" ")[0] || "de vuelta";
 
   return (
-    <main className="container">
-      <h1>Mi cuenta</h1>
-      {error && <p role="alert">{error}</p>}
-      {passwordActualizada && (
-        <p className="alert-success" role="status">
-          Tu contraseña se actualizo correctamente.
-        </p>
-      )}
+    <>
+      <div className="eyebrow">PRÓXIMA EXPERIENCIA</div>
+      <h1 style={{ marginBottom: 4 }}>Hola, {nombre}</h1>
+      <p className="page-lede">Todo lo de tus próximas entradas, en un solo lugar.</p>
 
-      <h2>Perfil</h2>
-      <div className="card" style={{ maxWidth: 440 }}>
-        <p className="muted" style={{ marginTop: 0 }}>
-          {user.email} · {perfil?.role ?? "comprador"}
-        </p>
-        <form action={actualizarPerfil} className="form">
-          <div className="field">
-            <label htmlFor="full_name">Nombre completo</label>
-            <input id="full_name" name="full_name" type="text" defaultValue={perfil?.full_name ?? ""} />
+      {proximoEvento ? (
+        <div className="card" style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "space-between" }}>
+          <div>
+            <small className="muted">PRÓXIMO EVENTO</small>
+            <h2 style={{ margin: "6px 0" }}>{proximoEvento.name}</h2>
+            <p className="muted" style={{ margin: 0 }}>
+              {new Date(proximoEvento.start_date).toLocaleString("es-CO", {
+                timeZone: "America/Bogota",
+                dateStyle: "full",
+                timeStyle: "short",
+              })}
+              <br />
+              {proximoEvento.location?.city}, {proximoEvento.location?.country}
+            </p>
+            <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+              <Link href="/mi-cuenta/entradas" className="btn btn-primary btn-sm">
+                Ver entradas
+              </Link>
+            </div>
           </div>
-          <div className="field">
-            <label htmlFor="phone">Telefono</label>
-            <input id="phone" name="phone" type="tel" defaultValue={perfil?.phone ?? ""} />
-          </div>
-          <button type="submit" className="btn btn-primary">
-            Guardar
-          </button>
-        </form>
-      </div>
-
-      <h2>Seguridad</h2>
-      <div className="card" style={{ maxWidth: 440 }}>
-        <p className="muted" style={{ marginTop: 0, marginBottom: 12 }}>
-          Cambia la contraseña con la que ingresas a tu cuenta.
-        </p>
-        <Link href="/cuenta/contrasena" className="btn btn-secondary">
-          Cambiar contraseña
-        </Link>
-      </div>
-
-      <h2>Mis compras</h2>
-      {ordenes.length === 0 ? (
-        <p className="empty-state">Todavia no has comprado boletos.</p>
+          <span className="badge badge-green" style={{ alignSelf: "flex-start" }}>
+            {entradasProximoEvento.length} {entradasProximoEvento.length === 1 ? "entrada" : "entradas"}
+          </span>
+        </div>
       ) : (
-        <ul className="list-plain">
-          {ordenes.map((orden) => {
-            const evento = orden.events;
-            const items = orden.order_items ?? [];
-            const totalBoletos = items.reduce((sum, item) => sum + item.tickets.length, 0);
-
-            return (
-              <li key={orden.id} className="card">
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <div>
-                    <h3 style={{ margin: "0 0 4px" }}>{evento?.name ?? "Evento"}</h3>
-                    {evento && (
-                      <p className="muted" style={{ margin: 0 }}>
-                        {evento.venue}, {evento.city} — {new Date(evento.starts_at).toLocaleString("es-CO", { timeZone: "America/Bogota" })}
-                      </p>
-                    )}
-                  </div>
-                  <span className={ESTADO_BADGE[orden.status] ?? "badge"}>
-                    {ESTADO_LABEL[orden.status] ?? orden.status}
-                  </span>
-                </div>
-
-                <ul className="list-plain" style={{ gap: 4, marginTop: 14 }}>
-                  {items.map((item) => (
-                    <li key={item.id} className="muted">
-                      {item.ticket_types?.name ?? "Boleto"} x{item.quantity} — $
-                      {item.unit_price_cop.toLocaleString("es-CO")} c/u
-                    </li>
-                  ))}
-                </ul>
-
-                <p className="muted" style={{ marginTop: 10, marginBottom: 0 }}>
-                  Total: ${orden.total_cop.toLocaleString("es-CO")} · Comprado el{" "}
-                  {new Date(orden.created_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}
-                </p>
-
-                {orden.status === "pagada" && totalBoletos > 0 && (
-                  <div style={{ marginTop: 18 }}>
-                    <p className="muted" style={{ fontSize: "0.82rem", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                      Tus boletos
-                    </p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-                      {items.flatMap((item) =>
-                        item.tickets.map((ticket, i) => (
-                          <Link
-                            key={ticket.id}
-                            href={`/mi-cuenta/boleto/${ticket.id}`}
-                            style={{
-                              width: 180,
-                              background: "var(--surface-2)",
-                              border: "1px solid var(--border)",
-                              borderRadius: "var(--radius)",
-                              padding: 12,
-                              textAlign: "center",
-                              display: "block",
-                              textDecoration: "none",
-                              color: "inherit",
-                            }}
-                          >
-                            {qrPorBoleto.get(ticket.id) && (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={qrPorBoleto.get(ticket.id)}
-                                alt={`Codigo QR del boleto ${i + 1}`}
-                                width={140}
-                                height={140}
-                                style={{ display: "block", margin: "0 auto 8px", borderRadius: 8, background: "#fff" }}
-                              />
-                            )}
-                            <p style={{ margin: "0 0 2px", fontSize: "0.8rem", fontWeight: 700 }}>
-                              {item.ticket_types?.name ?? "Boleto"} #{i + 1}
-                            </p>
-                            <p style={{ margin: "0 0 6px", fontSize: "0.72rem", color: "var(--muted)" }}>
-                              {ticket.holder_name || "Sin titular asignado"}
-                            </p>
-                            <span
-                              className={ticket.status === "valido" ? "badge badge-green" : "badge"}
-                              style={{ fontSize: "0.68rem" }}
-                            >
-                              {TICKET_ESTADO_LABEL[ticket.status] ?? ticket.status}
-                            </span>
-                            <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "var(--green)" }}>
-                              Ver / descargar →
-                            </p>
-                          </Link>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {orden.status === "pagada" && totalBoletos === 0 && (
-                  <p className="muted" style={{ fontSize: "0.85rem", marginTop: 10, marginBottom: 0 }}>
-                    Estamos generando tus boletos con codigo QR — si llevas mas de unos minutos
-                    viendo este mensaje, escribenos a soporte.
-                  </p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <div className="empty-state" style={{ marginTop: 20 }}>
+          Todavia no tienes entradas para próximos eventos.{" "}
+          <Link href="/eventos" className="text-link">
+            Explora eventos
+          </Link>
+          .
+        </div>
       )}
-    </main>
+
+      <div className="stat-grid">
+        <div className="stat-card">
+          <div className="value">{entradas.length}</div>
+          <div className="label">Entradas totales</div>
+        </div>
+        <div className="stat-card">
+          <div className="value">{proximas.length}</div>
+          <div className="label">Para próximos eventos</div>
+        </div>
+      </div>
+    </>
   );
 }

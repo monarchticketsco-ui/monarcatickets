@@ -141,3 +141,53 @@ export async function createFourvenuesCheckout(params: {
     }),
   });
 }
+
+export type FVTicket = {
+  _id: string;
+  event_id: string;
+  ticket_rate_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  qr_code: string;
+  status: string;
+  price: number;
+  total_price: number;
+  payment_currency: string;
+  entry_time: string | null;
+};
+
+/**
+ * FourVenues no tiene concepto de "cuenta Monarca": no existe un endpoint
+ * para buscar boletos por email directamente (GET /tickets exige
+ * event_id o ticket_rate_id). Para armar "Mis entradas" recorremos los
+ * eventos y filtramos los boletos de cada uno por email del comprador.
+ * Con pocos eventos simultaneos esto es rapido; si el catalogo crece
+ * mucho convendria acotar a eventos futuros o cachear.
+ */
+export async function getFourvenuesTicketsByEmail(
+  email: string
+): Promise<{ ticket: FVTicket; event: FVEvent }[]> {
+  const correo = email.trim().toLowerCase();
+  if (!correo) return [];
+
+  const eventos = await getFourvenuesEvents().catch(() => [] as FVEvent[]);
+  if (eventos.length === 0) return [];
+
+  const resultados = await Promise.all(
+    eventos.map(async (evento) => {
+      try {
+        const tickets = await fvFetch<FVTicket[]>(
+          `/tickets?event_id=${encodeURIComponent(evento._id)}&limit=200`
+        );
+        return tickets
+          .filter((t) => t.email?.trim().toLowerCase() === correo)
+          .map((ticket) => ({ ticket, event: evento }));
+      } catch {
+        return [];
+      }
+    })
+  );
+
+  return resultados.flat();
+}

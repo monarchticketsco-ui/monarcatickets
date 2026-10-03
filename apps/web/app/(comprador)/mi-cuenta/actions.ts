@@ -21,8 +21,9 @@ export async function actualizarPerfil(formData: FormData) {
     .eq("id", user.id);
 
   if (error) {
-    redirect(`/mi-cuenta?error=${encodeURIComponent(error.message)}`);
+    redirect(`/mi-cuenta/perfil?error=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/mi-cuenta");
+  revalidatePath("/mi-cuenta/perfil");
 }

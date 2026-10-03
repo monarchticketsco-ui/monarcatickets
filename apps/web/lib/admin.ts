@@ -20,3 +20,15 @@ export async function requireAdmin() {
 
   return { supabase, user };
 }
+
+// Helper compartido por Mi Cuenta: exige sesion (cualquier usuario logueado).
+export async function requireComprador() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  return { supabase, user };
+}
