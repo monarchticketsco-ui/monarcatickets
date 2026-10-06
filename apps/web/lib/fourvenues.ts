@@ -166,11 +166,11 @@ export type FVTicket = {
   entry_time: string | null;
 };
 
-/** Todos los tickets de un evento especifico (pagina de a 200; la mayoria de eventos de Monarca no pasan de eso, pero paginamos por si acaso). Usado por el Panel Polinizador (Ventas & Tickets, Asistentes). */
+/** Todos los tickets de un evento especifico (pagina de a 100 (maximo permitido por FourVenues); la mayoria de eventos de Monarca no pasan de eso, pero paginamos por si acaso). Usado por el Panel Polinizador (Ventas & Tickets, Asistentes). */
 export async function getFourvenuesTicketsByEvent(eventId: string): Promise<FVTicket[]> {
   const tickets: FVTicket[] = [];
   let offset = 0;
-  const limit = 200;
+  const limit = 100; // FourVenues rechaza limit > 100 (HTTP 400)
 
   for (;;) {
     const pagina = await fvFetch<FVTicket[]>(
