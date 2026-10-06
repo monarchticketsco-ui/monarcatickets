@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { imagenDeEvento } from "@/lib/event-visuals";
 import { getFourvenuesEventBySlug } from "@/lib/fourvenues";
+import { fechaEvento, horarioEvento, estadoTarifa, ARTISTAS_ETIQUETA } from "@/lib/fv-format";
 import { ComprarBoton } from "./comprar-boton";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,8 @@ export default async function EventoPublicoPage({
   const ficha: { valor: string; etiqueta: string }[] = [];
   if (evento.age) ficha.push({ valor: `${evento.age}+ anos`, etiqueta: "Edad minima" });
   if (evento.outfit) ficha.push({ valor: evento.outfit, etiqueta: "Dress code" });
+  if (evento.music_genres?.length) ficha.push({ valor: evento.music_genres.map(ARTISTAS_ETIQUETA).join(", "), etiqueta: "Musica" });
+  if (evento.ambiences?.length) ficha.push({ valor: evento.ambiences.map(ARTISTAS_ETIQUETA).join(", "), etiqueta: "Ambiente" });
 
   const zonas = evento.ticket_rates ?? [];
 
@@ -50,15 +53,27 @@ export default async function EventoPublicoPage({
 
       <div style={{ marginBottom: 28 }}>
         <p className="page-lede">
-          {evento.location?.name} · {evento.location?.city} ·{" "}
-          {new Date(evento.start_date).toLocaleString("es-CO", {
-            dateStyle: "long",
-            timeStyle: "short",
-            timeZone: "America/Bogota",
-          })}
+          {evento.location?.name} · {evento.location?.city} · {fechaEvento(evento)} · {horarioEvento(evento)}
         </p>
         {evento.description && <p>{evento.description}</p>}
       </div>
+
+      {(evento.artists?.length ?? 0) > 0 && (
+        <section className="event-section">
+          <h2>Artistas</h2>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            {evento.artists!.map((a) => (
+              <div key={a.name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {a.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.image_url} alt="" width={48} height={48} style={{ borderRadius: "50%", objectFit: "cover" }} />
+                )}
+                <strong>{a.name}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {ficha.length > 0 && (
         <section className="event-section">
@@ -97,7 +112,8 @@ export default async function EventoPublicoPage({
             {zonas.map((zona) => {
               const precio = zona.current_price;
               const disponibles = zona.availability?.available ?? 0;
-              const agotado = disponibles <= 0 || !zona.available;
+              const estado = estadoTarifa(zona);
+              const agotado = estado.tipo !== "disponible";
 
               return (
                 <div className="ticket-zone" key={zona._id}>
@@ -118,6 +134,9 @@ export default async function EventoPublicoPage({
                         <tr className={agotado ? "ticket-row-inactiva" : undefined}>
                           <td className="price-cell">
                             <div>${precio?.price.toLocaleString("es-CO") ?? "—"}</div>
+                            {(precio?.includes || precio?.additional_info) && (
+                              <div className="price-fee-note">{[precio.includes, precio.additional_info].filter(Boolean).join(" · ")}</div>
+                            )}
                             {precio && precio.fee_quantity > 0 && (
                               <div className="price-fee-note">
                                 + {precio.fee_type === "percentage" ? `${precio.fee_quantity}% servicio` : `$${precio.fee_quantity.toLocaleString("es-CO")} servicio`}
@@ -125,8 +144,8 @@ export default async function EventoPublicoPage({
                             )}
                           </td>
                           <td>
-                            <span className={agotado ? "badge badge-danger" : "badge badge-green"}>
-                              {agotado ? "Agotado" : `${disponibles} disponibles`}
+                            <span className={estado.tipo === "disponible" ? "badge badge-green" : estado.tipo === "no-iniciada" ? "badge badge-blue" : "badge badge-danger"}>
+                              {estado.texto}
                             </span>
                           </td>
                           <td className="ticket-action-cell">

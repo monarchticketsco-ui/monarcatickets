@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireOrganizer, getEventoYTicketsDelOrganizador } from "@/lib/organizer";
+import { fechaEvento, horarioEvento } from "@/lib/fv-format";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export default async function MiEventoPage() {
       <div className="eyebrow">MI EVENTO</div>
       <h1 style={{ marginBottom: 4 }}>{evento.name}</h1>
       <p className="page-lede">
-        {new Date(evento.start_date).toLocaleString("es-CO", { timeZone: "America/Bogota", dateStyle: "full", timeStyle: "short" })}
+        {fechaEvento(evento, "full")} · {horarioEvento(evento)}
       </p>
 
       <div className="card" style={{ marginTop: 20 }}>

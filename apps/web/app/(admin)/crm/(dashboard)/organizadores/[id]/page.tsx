@@ -3,32 +3,22 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { actualizarFichaOrganizador } from "../actions";
-import { getFourvenuesEventById } from "@/lib/fourvenues";
+import { getFourvenuesEventById, getFourvenuesTicketsByEvent } from "@/lib/fourvenues";
+import { moneda } from "@/lib/fv-admin";
+import { fechaCorta } from "@/lib/fv-format";
 
-const EVENTO_BADGE: Record<string, string> = {
-  borrador: "badge",
-  publicado: "badge badge-blue",
-  en_venta: "badge badge-green",
-  finalizado: "badge",
-  cancelado: "badge badge-danger",
+export const dynamic = "force-dynamic";
+
+const TICKET_BADGE: Record<string, string> = {
+  active: "badge badge-green",
+  used: "badge",
+  refunded: "badge badge-danger",
+  cancelled: "badge badge-danger",
 };
 
-const ORDEN_BADGE: Record<string, string> = {
-  pendiente: "badge badge-warning",
-  pagada: "badge badge-green",
-  fallida: "badge badge-danger",
-};
-
-export default async function OrganizadorDetallePage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ eventId?: string; desde?: string; hasta?: string }>;
-}) {
+export default async function OrganizadorDetallePage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const { eventId, desde, hasta } = await searchParams;
   const admin = createAdminClient();
 
   const { data: organizador } = await admin
@@ -44,39 +34,9 @@ export default async function OrganizadorDetallePage({
   const eventoAsignado = organizador.fourvenues_event_id
     ? await getFourvenuesEventById(organizador.fourvenues_event_id)
     : null;
-
-  const { data: eventos } = await admin
-    .from("events")
-    .select("id, name, city, starts_at, status")
-    .eq("organizer_id", id)
-    .order("starts_at", { ascending: false });
-
-  const eventosList = eventos ?? [];
-  const eventIds = eventosList.map((e) => e.id);
-  const eventosMap = new Map(eventosList.map((e) => [e.id, e.name]));
-
-  // El evento del filtro solo cuenta si de verdad es de este organizador.
-  const eventoFiltro = eventId && eventIds.includes(eventId) ? eventId : undefined;
-  const idsParaVentas = eventoFiltro ? [eventoFiltro] : eventIds;
-  const hayFiltrosVentas = Boolean(eventoFiltro || desde || hasta);
-
-  let ventasQuery = admin
-    .from("orders")
-    .select("id, event_id, total_cop, ticket_service_cop, status, created_at, profiles(full_name)")
-    .in("event_id", idsParaVentas.length ? idsParaVentas : ["00000000-0000-0000-0000-000000000000"])
-    .order("created_at", { ascending: false })
-    .limit(300);
-
-  if (desde) ventasQuery = ventasQuery.gte("created_at", `${desde}T00:00:00`);
-  if (hasta) ventasQuery = ventasQuery.lte("created_at", `${hasta}T23:59:59`);
-
-  const { data: ventasData } = await ventasQuery;
-  const ventas = ventasData ?? [];
-  // Ingreso real del organizador: el total cobrado menos el Ticket
-  // Service, que Monarca retiene (ver migracion 0012).
-  const totalPagado = ventas
-    .filter((v) => v.status === "pagada")
-    .reduce((acc, v) => acc + (v.total_cop - v.ticket_service_cop), 0);
+  const tickets = eventoAsignado ? await getFourvenuesTicketsByEvent(eventoAsignado._id) : [];
+  const validos = tickets.filter((t) => t.status !== "refunded" && t.status !== "cancelled");
+  const ingresos = validos.reduce((acc, t) => acc + (t.total_price || 0), 0);
 
   const actualizarFichaConId = actualizarFichaOrganizador.bind(null, id);
 
@@ -146,7 +106,7 @@ export default async function OrganizadorDetallePage({
                 defaultValue={organizador.commission_rate}
               />
               <p className="muted" style={{ fontSize: "0.78rem", margin: "4px 0 0" }}>
-                Se suma al precio de cada boleto y lo paga el comprador al pagar con Bold.
+                Porcentaje acordado con el Polinizador. El cobro al comprador (precio + cargo por servicio) lo define y procesa FourVenues.
               </p>
             </div>
           </div>
@@ -178,120 +138,61 @@ export default async function OrganizadorDetallePage({
         </form>
       </div>
 
-      <h2>Ventas realizadas</h2>
-      <form className="form-row" style={{ marginBottom: 20, flexWrap: "wrap" }}>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="eventId">Evento</label>
-          <select id="eventId" name="eventId" defaultValue={eventoFiltro ?? ""} style={{ minWidth: 200 }}>
-            <option value="">Todos los eventos</option>
-            {eventosList.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="desde">Desde</label>
-          <input id="desde" name="desde" type="date" defaultValue={desde ?? ""} />
-        </div>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="hasta">Hasta</label>
-          <input id="hasta" name="hasta" type="date" defaultValue={hasta ?? ""} />
-        </div>
-        <button type="submit" className="btn btn-secondary" style={{ alignSelf: "flex-end" }}>
-          Filtrar
-        </button>
-        {hayFiltrosVentas && (
-          <Link href={`/crm/organizadores/${id}`} className="nav-link" style={{ alignSelf: "flex-end", padding: "10px 0" }}>
-            Limpiar filtros
-          </Link>
-        )}
-      </form>
-
-      <div className="stat-grid">
-        <div className="stat-card">
-          <div className="value">{ventas.length}</div>
-          <div className="label">Ventas {hayFiltrosVentas ? "(filtradas)" : ""}</div>
-        </div>
-        <div className="stat-card">
-          <div className="value">${totalPagado.toLocaleString("es-CO")}</div>
-          <div className="label">Ingresos confirmados COP (sin Ticket Service)</div>
-        </div>
-      </div>
-
-      {eventosList.length === 0 ? (
-        <p className="empty-state">Este organizador todavia no tiene eventos.</p>
-      ) : ventas.length === 0 ? (
+      <h2>Evento y ventas (FourVenues)</h2>
+      {!eventoAsignado ? (
         <p className="empty-state">
-          {hayFiltrosVentas ? "No hay ventas con esos filtros." : "Todavia no hay ventas para este organizador."}
+          Este Polinizador todavia no tiene un evento de FourVenues asignado. Asignalo en la ficha (campo "Evento de
+          FourVenues asignado") para que vea sus ventas en su panel.
         </p>
       ) : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Evento</th>
-                <th>Comprador</th>
-                <th>Total</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ventas.map((v) => {
-                const comprador = v.profiles as unknown as { full_name: string | null } | null;
-                return (
-                  <tr key={v.id}>
-                    <td>{new Date(v.created_at).toLocaleString("es-CO", { timeZone: "America/Bogota" })}</td>
-                    <td>{eventosMap.get(v.event_id) ?? "—"}</td>
-                    <td>{comprador?.full_name ?? "—"}</td>
-                    <td>${v.total_cop.toLocaleString("es-CO")}</td>
-                    <td>
-                      <span className={ORDEN_BADGE[v.status] ?? "badge"}>{v.status}</span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+        <>
+          <div className="stat-grid">
+            <div className="stat-card">
+              <div className="value" style={{ fontSize: "1.05rem" }}>{eventoAsignado.name}</div>
+              <div className="label">{fechaCorta(eventoAsignado)} · {eventoAsignado.location?.name}</div>
+            </div>
+            <div className="stat-card">
+              <div className="value">{validos.length}</div>
+              <div className="label">Entradas vendidas</div>
+            </div>
+            <div className="stat-card">
+              <div className="value">{moneda(ingresos, eventoAsignado.currency)}</div>
+              <div className="label">Ingresos brutos</div>
+            </div>
+          </div>
 
-      <h2>Eventos</h2>
-      {eventosList.length === 0 ? (
-        <p className="empty-state">Este organizador todavia no tiene eventos.</p>
-      ) : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Evento</th>
-                <th>Ciudad</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {eventosList.map((e) => (
-                <tr key={e.id}>
-                  <td>{e.name}</td>
-                  <td>{e.city}</td>
-                  <td>{new Date(e.starts_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}</td>
-                  <td>
-                    <span className={EVENTO_BADGE[e.status] ?? "badge"}>{e.status}</span>
-                  </td>
-                  <td>
-                    <Link href={`/crm/eventos/${e.id}`} className="btn btn-secondary btn-sm">
-                      Editar
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          {tickets.length === 0 ? (
+            <p className="empty-state">Todavia no hay tickets emitidos para este evento.</p>
+          ) : (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Asistente</th>
+                    <th>Correo</th>
+                    <th>Localidad</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickets.slice(0, 100).map((t) => (
+                    <tr key={t._id}>
+                      <td>{t.full_name || "—"}</td>
+                      <td>{t.email || "—"}</td>
+                      <td>{eventoAsignado.ticket_rates?.find((r) => r._id === t.ticket_rate_id)?.name ?? "—"}</td>
+                      <td>{moneda(t.total_price || 0, eventoAsignado.currency)}</td>
+                      <td>
+                        <span className={TICKET_BADGE[t.status] ?? "badge"}>{t.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {tickets.length > 100 && <p className="muted">Mostrando 100 de {tickets.length} tickets.</p>}
+            </div>
+          )}
+        </>
       )}
     </>
   );

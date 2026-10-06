@@ -1,55 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { requireApiClient } from "@/lib/api-auth";
-import { esEventoActivo, tiposDeBoletoPorEvento } from "@/lib/api-eventos";
+import { retirado } from "@/lib/retirada";
 
-// API publica para integraciones de terceros (bot de WhatsApp, etc.).
-// Ver documentacion en /docs/api-partners.md.
-export async function GET(req: NextRequest) {
-  const auth = await requireApiClient(req, "eventos:leer");
-  if ("error" in auth) return auth.error;
+// Endpoint retirado: FourVenues es el motor unico de eventos, precios, checkout y tickets.
+const respuesta = () => retirado("La API publica de eventos de Monarca fue retirada. Consulta los eventos directamente en la API de FourVenues (Channel Manager).");
 
-  const { searchParams } = new URL(req.url);
-  const q = searchParams.get("q");
-  const ciudad = searchParams.get("ciudad");
-  const categoria = searchParams.get("categoria");
-  const fecha = searchParams.get("fecha");
-  const limit = Math.min(Number(searchParams.get("limit")) || 50, 100);
-
-  const admin = createAdminClient();
-  let query = admin
-    .from("events")
-    .select("id, name, description, venue, city, category, starts_at, ends_at, status, image_url")
-    .in("status", ["publicado", "en_venta"])
-    .order("starts_at", { ascending: true })
-    .limit(limit);
-
-  if (q) query = query.ilike("name", `%${q}%`);
-  if (ciudad) query = query.eq("city", ciudad);
-  if (categoria) query = query.eq("category", categoria);
-  if (fecha) {
-    const inicio = new Date(`${fecha}T00:00:00`);
-    const fin = new Date(`${fecha}T23:59:59`);
-    query = query.gte("starts_at", inicio.toISOString()).lte("starts_at", fin.toISOString());
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    return NextResponse.json({ error: "error_consultando_eventos" }, { status: 500 });
-  }
-
-  const eventos = data ?? [];
-  const tiposPorEvento = await tiposDeBoletoPorEvento(
-    admin,
-    eventos.map((e) => e.id)
-  );
-
-  const resultado = eventos.map((e) => ({
-    ...e,
-    activo: esEventoActivo(e.status),
-    tipos_de_boleto: tiposPorEvento.get(e.id) ?? [],
-  }));
-
-  return NextResponse.json({ eventos: resultado });
-}
+export const GET = respuesta;
+export const POST = respuesta;
+export const PUT = respuesta;
+export const PATCH = respuesta;
+export const DELETE = respuesta;

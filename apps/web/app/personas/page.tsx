@@ -15,7 +15,7 @@ const BENEFICIOS = [
   },
   {
     titulo: "Pago seguro",
-    texto: "Compra con tarjeta o PSE a través de Bold. Tus datos nunca quedan guardados en Monarca.",
+    texto: "Pagas en el checkout seguro de FourVenues. Monarca no guarda los datos de tu tarjeta.",
     icon: (
       <path d="M12 3 4 6v6c0 4.6 3.2 8.4 8 9 4.8-.6 8-4.4 8-9V6l-8-3Zm-1.5 9.5 2 2 4-4" />
     ),
@@ -37,7 +37,7 @@ export default function PersonasPage() {
         <h1>Encuentra y compra boletos para tu próxima experiencia</h1>
         <p className="page-lede">
           Conciertos, festivales, teatro, deporte y planes familiares en toda Colombia, con boleto digital y
-          control de aforo real.
+          disponibilidad en tiempo real.
         </p>
       </div>
 

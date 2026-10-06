@@ -5,6 +5,7 @@ import { Reveal } from "@/components/reveal";
 import { imagenDeEvento } from "@/lib/event-visuals";
 import { BLOG_POSTS } from "@/lib/blog-posts";
 import { getFourvenuesEvents } from "@/lib/fourvenues";
+import { eventoVigente } from "@/lib/fv-format";
 
 const CATEGORIAS_HOME = [
   {
@@ -61,13 +62,14 @@ export default async function HomePage() {
     name: e.name,
     venue: e.location?.name ?? "",
     city: e.location?.city ?? "",
-    starts_at: e.start_date,
+    starts_at: e.display_date || e.start_date,
+    vigente: eventoVigente(e),
     category: null as string | null,
     image_url: e.image_url || null,
   }));
 
   const conFecha = todos
-    .filter((e) => new Date(e.starts_at).getTime() >= Date.now())
+    .filter((e) => e.vigente)
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
     .map((e) => ({
       ...e,

@@ -56,6 +56,8 @@ export type FVPrice = {
   fee_type: "percentage" | "fixed";
   fee_quantity: number;
   quantity: number;
+  includes?: string;
+  additional_info?: string;
 };
 
 export type FVTicketRate = {
@@ -69,6 +71,8 @@ export type FVTicketRate = {
   min: number;
   max: number;
   nominative: boolean;
+  complete?: boolean;
+  show_all_prices?: boolean;
   available: boolean;
   availability: { sold: number; available: number };
   fields: { type: string; required: boolean; label: string; slug: string }[];
@@ -86,14 +90,24 @@ export type FVEvent = {
   age: number | null;
   outfit: string | null;
   image_url: string;
+  ambiences?: string[];
+  music_genres?: string[];
+  artists?: { name: string; image_url?: string }[];
+  is_until_late?: boolean;
   location: FVLocation;
   currency: string;
   ticket_rates?: FVTicketRate[];
 };
 
-/** Catalogo publico — usado por /eventos. */
-export async function getFourvenuesEvents(): Promise<FVEvent[]> {
-  return fvFetch<FVEvent[]>("/events?populate=ticket-rates&limit=100");
+/**
+ * Catalogo publico — usado por /eventos y el home. Sin parametros de fecha
+ * FourVenues devuelve solo los eventos vigentes; con `incluirPasados`
+ * pedimos un rango amplio (start_date/end_date) para traer tambien los
+ * que ya terminaron (historial de entradas en Mi Cuenta).
+ */
+export async function getFourvenuesEvents(opts?: { incluirPasados?: boolean }): Promise<FVEvent[]> {
+  const rango = opts?.incluirPasados ? "&start_date=2020-01-01&end_date=2035-01-01" : "";
+  return fvFetch<FVEvent[]>(`/events?populate=ticket-rates&limit=100${rango}`);
 }
 
 /** Detalle de un evento por slug — usado por /eventos/[slug]. */
@@ -164,6 +178,8 @@ export type FVTicket = {
   total_price: number;
   payment_currency: string;
   entry_time: string | null;
+  created_at?: string;
+  activation_date?: string | null;
 };
 
 /** Todos los tickets de un evento especifico (pagina de a 100 (maximo permitido por FourVenues); la mayoria de eventos de Monarca no pasan de eso, pero paginamos por si acaso). Usado por el Panel Polinizador (Ventas & Tickets, Asistentes). */
@@ -187,33 +203,18 @@ export async function getFourvenuesTicketsByEvent(eventId: string): Promise<FVTi
 /**
  * FourVenues no tiene concepto de "cuenta Monarca": no existe un endpoint
  * para buscar boletos por email directamente (GET /tickets exige
- * event_id o ticket_rate_id). Para armar "Mis entradas" recorremos los
- * eventos y filtramos los boletos de cada uno por email del comprador.
- * Con pocos eventos simultaneos esto es rapido; si el catalogo crece
- * mucho convendria acotar a eventos futuros o cachear.
- *
- * `/events` solo lista eventos vigentes/en venta: un evento que ya paso
- * desaparece de ahi aunque la persona si haya comprado boleto. Por eso
- * este helper acepta `extraEventIds` (por ejemplo, los eventos que
- * Management ya asigno a algun organizador en `organizers.fourvenues_event_id`)
- * para que el historial no pierda boletos de eventos finalizados.
+ * event_id o ticket_rate_id). Para armar "Mis entradas" recorremos TODOS
+ * los eventos (vigentes y pasados, via rango de fechas) y filtramos los
+ * boletos de cada uno por email del comprador. Con pocos eventos es
+ * rapido; si el catalogo crece mucho convendria cachear.
  */
 export async function getFourvenuesTicketsByEmail(
-  email: string,
-  extraEventIds: string[] = []
+  email: string
 ): Promise<{ ticket: FVTicket; event: FVEvent }[]> {
   const correo = email.trim().toLowerCase();
   if (!correo) return [];
 
-  const eventosVigentes = await getFourvenuesEvents().catch(() => [] as FVEvent[]);
-  const idsVigentes = new Set(eventosVigentes.map((e) => e._id));
-  const idsExtra = [...new Set(extraEventIds)].filter((id) => id && !idsVigentes.has(id));
-
-  const eventosExtra = (
-    await Promise.all(idsExtra.map((id) => getFourvenuesEventById(id)))
-  ).filter((e): e is FVEvent => e !== null);
-
-  const eventos = [...eventosVigentes, ...eventosExtra];
+  const eventos = await getFourvenuesEvents({ incluirPasados: true });
   if (eventos.length === 0) return [];
 
   const resultados = await Promise.all(

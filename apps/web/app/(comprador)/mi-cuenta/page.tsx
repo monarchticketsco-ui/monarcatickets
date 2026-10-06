@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { requireComprador, getEventosAsignados } from "@/lib/admin";
+import { requireComprador } from "@/lib/admin";
 import { getFourvenuesTicketsByEmail } from "@/lib/fourvenues";
+import { eventoVigente, fechaEvento, horarioEvento } from "@/lib/fv-format";
 
 export const dynamic = "force-dynamic";
 
@@ -9,14 +10,10 @@ export default async function MiCuentaResumenPage() {
 
   const { data: perfil } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
 
-  const eventosAsignados = await getEventosAsignados().catch(() => [] as string[]);
-  const entradas = user.email
-    ? await getFourvenuesTicketsByEmail(user.email, eventosAsignados).catch(() => [])
-    : [];
+  const entradas = user.email ? await getFourvenuesTicketsByEmail(user.email).catch(() => []) : [];
 
-  const ahora = Date.now();
   const proximas = entradas
-    .filter((e) => new Date(e.event.start_date).getTime() >= ahora)
+    .filter((e) => eventoVigente(e.event))
     .sort((a, b) => new Date(a.event.start_date).getTime() - new Date(b.event.start_date).getTime());
 
   const proximoEvento = proximas[0]?.event;
@@ -36,11 +33,7 @@ export default async function MiCuentaResumenPage() {
             <small className="muted">PRÓXIMO EVENTO</small>
             <h2 style={{ margin: "6px 0" }}>{proximoEvento.name}</h2>
             <p className="muted" style={{ margin: 0 }}>
-              {new Date(proximoEvento.start_date).toLocaleString("es-CO", {
-                timeZone: "America/Bogota",
-                dateStyle: "full",
-                timeStyle: "short",
-              })}
+              {fechaEvento(proximoEvento, "full")} · {horarioEvento(proximoEvento)}
               <br />
               {proximoEvento.location?.city}, {proximoEvento.location?.country}
             </p>

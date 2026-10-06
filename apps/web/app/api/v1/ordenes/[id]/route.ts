@@ -1,31 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { requireApiClient } from "@/lib/api-auth";
+import { retirado } from "@/lib/retirada";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireApiClient(req, "ordenes:leer");
-  if ("error" in auth) return auth.error;
+// Endpoint retirado: FourVenues es el motor unico de eventos, precios, checkout y tickets.
+const respuesta = () => retirado("La API publica de ordenes de Monarca fue retirada. Las compras y tickets se gestionan en FourVenues.");
 
-  const { id } = await params;
-  const admin = createAdminClient();
-
-  const { data: orden } = await admin
-    .from("orders")
-    .select("id, status, total_cop, created_at, events(name)")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (!orden) {
-    return NextResponse.json({ error: "orden_no_encontrada" }, { status: 404 });
-  }
-
-  const evento = orden.events as unknown as { name: string } | null;
-
-  return NextResponse.json({
-    orden_id: orden.id,
-    estado: orden.status,
-    total_cop: orden.total_cop,
-    evento: evento?.name ?? null,
-    creada_en: orden.created_at,
-  });
-}
+export const GET = respuesta;
+export const POST = respuesta;
+export const PUT = respuesta;
+export const PATCH = respuesta;
+export const DELETE = respuesta;

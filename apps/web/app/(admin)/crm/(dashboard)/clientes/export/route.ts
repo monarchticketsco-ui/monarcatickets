@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getEventosConTickets } from "@/lib/fv-admin";
 
 function csvEscape(value: string): string {
   if (/[",\n]/.test(value)) {
@@ -32,18 +33,27 @@ export async function GET(request: NextRequest) {
   const { data: usersData } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
   const emailPorId = new Map((usersData?.users ?? []).map((u) => [u.id, u.email ?? ""]));
 
-  const { data: ordenesPagadas } = await admin.from("orders").select("user_id, total_cop").eq("status", "pagada");
-  const statsPorCliente = new Map<string, { pedidos: number; total: number }>();
-  for (const o of ordenesPagadas ?? []) {
-    const prev = statsPorCliente.get(o.user_id) ?? { pedidos: 0, total: 0 };
-    prev.pedidos += 1;
-    prev.total += o.total_cop;
-    statsPorCliente.set(o.user_id, prev);
+  // Entradas y gasto salen de FourVenues (por correo del comprador), no de
+  // la tabla local de ordenes.
+  const statsPorCorreo = new Map<string, { pedidos: number; total: number }>();
+  try {
+    for (const { tickets } of await getEventosConTickets()) {
+      for (const t of tickets) {
+        if (t.status === "refunded" || t.status === "cancelled") continue;
+        const k = (t.email || "").trim().toLowerCase();
+        const prev = statsPorCorreo.get(k) ?? { pedidos: 0, total: 0 };
+        prev.pedidos += 1;
+        prev.total += t.total_price || 0;
+        statsPorCorreo.set(k, prev);
+      }
+    }
+  } catch {
+    // FourVenues no respondio: las columnas quedan en 0.
   }
 
-  const encabezados = ["Nombre", "Correo", "Telefono", "Cliente desde", "Pedidos pagados", "Total gastado COP"];
+  const encabezados = ["Nombre", "Correo", "Telefono", "Cliente desde", "Entradas", "Total gastado COP"];
   const filas = clientes.map((c) => {
-    const stats = statsPorCliente.get(c.id) ?? { pedidos: 0, total: 0 };
+    const stats = statsPorCorreo.get((emailPorId.get(c.id) ?? "").toLowerCase()) ?? { pedidos: 0, total: 0 };
     return [
       c.full_name ?? "",
       emailPorId.get(c.id) ?? "",

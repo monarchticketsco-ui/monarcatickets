@@ -37,7 +37,7 @@ const SERVICIOS = [
   "Gestión de eventos y administración de aforos, con disponibilidad en tiempo real.",
   "Control de acceso y validación de entradas en punto de ingreso.",
   "Reportes y visibilidad sobre ventas e ingresos para cada organizador.",
-  "Integración con pasarela de pago (Bold) para el cobro en línea.",
+  "Cobro en línea a través del checkout seguro de FourVenues.",
   "Soluciones a la medida para productores, empresas y organizadores de eventos.",
 ];
 

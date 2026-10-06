@@ -34,7 +34,7 @@ export default function ConsentimientoPage() {
         <h2>3. Datos que no compartimos con terceros para fines comerciales</h2>
         <p>
           No vendemos ni alquilamos tu información personal a terceros. Compartimos únicamente lo estrictamente
-          necesario con: (i) la pasarela de pagos Bold, para procesar tu compra; (ii) el organizador del evento al
+          necesario con: (i) FourVenues, plataforma de ticketing y pagos que procesa tu compra; (ii) el organizador del evento al
           que compraste boletos, para efectos de validación de acceso y, cuando aplique, facturación; y (iii)
           autoridades, cuando exista un requerimiento legal.
         </p>

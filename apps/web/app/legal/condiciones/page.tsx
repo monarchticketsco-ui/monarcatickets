@@ -60,7 +60,7 @@ export default function CondicionesPage() {
         <ul>
           <li>Los precios se muestran en pesos colombianos (COP) e incluyen los cargos que se indiquen antes del pago.</li>
           <li>
-            El pago se procesa a través de <strong>Bold</strong>, pasarela de pagos autorizada en Colombia. Monarca
+            El pago se procesa a través del checkout de <strong>FourVenues</strong>, plataforma de ticketing que opera nuestras ventas. Monarca
             Tickets no almacena los datos completos de tu tarjeta; estos son manejados directamente por la pasarela
             de pago bajo sus propios estándares de seguridad.
           </li>

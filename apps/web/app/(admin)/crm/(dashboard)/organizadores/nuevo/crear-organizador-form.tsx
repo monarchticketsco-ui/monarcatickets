@@ -78,7 +78,7 @@ export function CrearOrganizadorForm({
             <label htmlFor="commission_rate">Ticket Service (%)</label>
             <input id="commission_rate" name="commission_rate" type="number" min={0} max={100} step="0.01" defaultValue={10} />
             <p className="muted" style={{ fontSize: "0.78rem", margin: "4px 0 0" }}>
-              Se suma al precio de cada boleto y lo paga el comprador al pagar con Bold.
+              Se suma al precio de cada boleto y lo paga el comprador en el checkout.
             </p>
           </div>
         </div>

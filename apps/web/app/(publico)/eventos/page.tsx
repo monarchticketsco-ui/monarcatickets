@@ -2,6 +2,7 @@ import Link from "next/link";
 import { EventSearchBar } from "@/components/event-search-bar";
 import { imagenDeEvento } from "@/lib/event-visuals";
 import { getFourvenuesEvents } from "@/lib/fourvenues";
+import { fechaCorta } from "@/lib/fv-format";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +32,9 @@ export default async function EventosPage({
   }
   if (ciudad) eventos = eventos.filter((e) => e.location?.city === ciudad);
   if (fecha) {
-    eventos = eventos.filter((e) => e.start_date?.slice(0, 10) === fecha);
+    eventos = eventos.filter((e) => (e.display_date || e.start_date)?.slice(0, 10) === fecha || e.start_date?.slice(0, 10) === fecha);
   }
-  eventos = [...eventos].sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+  eventos = [...eventos].sort((a, b) => new Date(a.display_date || a.start_date).getTime() - new Date(b.display_date || b.start_date).getTime());
 
   const hayFiltros = Boolean(q || ciudad || fecha);
 
@@ -78,12 +79,7 @@ export default async function EventosPage({
                     <h3>{e.name}</h3>
                     <p className="muted">
                       {e.location?.city} ·{" "}
-                      {new Date(e.start_date).toLocaleDateString("es-CO", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        timeZone: "America/Bogota",
-                      })}
+                      {fechaCorta(e)}
                     </p>
                   </div>
                 </Link>

@@ -1,96 +1,79 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
+import { aforoDelEvento, getEventosConTickets, moneda } from "@/lib/fv-admin";
+import { eventoVigente, fechaCorta, horarioEvento } from "@/lib/fv-format";
 
-const ESTADO_BADGE: Record<string, string> = {
-  borrador: "badge",
-  publicado: "badge badge-blue",
-  en_venta: "badge badge-green",
-  finalizado: "badge",
-  cancelado: "badge badge-danger",
-};
+export const dynamic = "force-dynamic";
 
-export default async function CrmEventosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ desde?: string; hasta?: string }>;
-}) {
-  const { desde, hasta } = await searchParams;
-  const { supabase } = await requireAdmin();
+export default async function CrmEventosPage() {
+  await requireAdmin();
 
-  let query = supabase
-    .from("events")
-    .select("id, name, city, starts_at, status, organizers(legal_name)")
-    .order("starts_at", { ascending: false })
-    .limit(300);
-
-  if (desde) query = query.gte("starts_at", `${desde}T00:00:00`);
-  if (hasta) query = query.lte("starts_at", `${hasta}T23:59:59`);
-
-  const { data: eventos } = await query;
-  const items = eventos ?? [];
-  const hayFiltros = Boolean(desde || hasta);
+  let eventos: Awaited<ReturnType<typeof getEventosConTickets>> = [];
+  let error = false;
+  try {
+    eventos = await getEventosConTickets();
+  } catch {
+    error = true;
+  }
 
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-        <h1 style={{ marginBottom: 0 }}>Eventos</h1>
-        <Link href="/crm/eventos/nuevo" className="btn btn-primary">
-          + Crear evento
-        </Link>
-      </div>
-      <p className="page-lede">Todos los eventos de la plataforma, de todos los organizadores.</p>
+      <h1>Eventos</h1>
+      <p className="page-lede">
+        Espejo en vivo de FourVenues. Los eventos, localidades y precios se crean y editan en FourVenues; aqui solo se
+        consultan. Para que un Polinizador vea su evento, asignalo desde su ficha en Polinizadores.
+      </p>
 
-      <form className="form-row" style={{ marginBottom: 20, flexWrap: "wrap" }}>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="desde">Desde</label>
-          <input id="desde" name="desde" type="date" defaultValue={desde ?? ""} />
-        </div>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="hasta">Hasta</label>
-          <input id="hasta" name="hasta" type="date" defaultValue={hasta ?? ""} />
-        </div>
-        <button type="submit" className="btn btn-secondary" style={{ alignSelf: "flex-end" }}>
-          Filtrar
-        </button>
-        {hayFiltros && (
-          <Link href="/crm/eventos" className="nav-link" style={{ alignSelf: "flex-end", padding: "10px 0" }}>
-            Limpiar filtros
-          </Link>
-        )}
-      </form>
+      {error && <p className="empty-state">No pudimos consultar FourVenues en este momento.</p>}
 
-      {items.length === 0 ? (
-        <p className="empty-state">
-          {hayFiltros ? "No hay eventos en ese rango de fechas." : "Todavia no hay eventos creados."}
-        </p>
+      {!error && eventos.length === 0 ? (
+        <p className="empty-state">No hay eventos en FourVenues.</p>
       ) : (
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Evento</th>
-                <th>Organizador</th>
-                <th>Ciudad</th>
+                <th>Lugar</th>
                 <th>Fecha</th>
+                <th>Localidades</th>
+                <th>Vendidas</th>
+                <th>Ingresos brutos</th>
                 <th>Estado</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {items.map((e) => {
-                const organizador = e.organizers as unknown as { legal_name: string } | null;
+              {eventos.map(({ event, vendidos, ingresos }) => {
+                const aforo = aforoDelEvento(event);
                 return (
-                  <tr key={e.id}>
-                    <td>{e.name}</td>
-                    <td>{organizador?.legal_name ?? "—"}</td>
-                    <td>{e.city}</td>
-                    <td>{new Date(e.starts_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })}</td>
+                  <tr key={event._id}>
                     <td>
-                      <span className={ESTADO_BADGE[e.status] ?? "badge"}>{e.status}</span>
+                      <strong>{event.name}</strong>
+                      <div className="muted" style={{ fontSize: "0.78rem" }}>ID {event._id}</div>
                     </td>
                     <td>
-                      <Link href={`/crm/eventos/${e.id}`} className="btn btn-secondary btn-sm">
-                        Editar
+                      {event.location?.name}
+                      <div className="muted" style={{ fontSize: "0.78rem" }}>{event.location?.city}</div>
+                    </td>
+                    <td>
+                      {fechaCorta(event)}
+                      <div className="muted" style={{ fontSize: "0.78rem" }}>{horarioEvento(event)}</div>
+                    </td>
+                    <td>{event.ticket_rates?.length ?? 0}</td>
+                    <td>
+                      {vendidos}
+                      <div className="muted" style={{ fontSize: "0.78rem" }}>{aforo.disponibles} disp.</div>
+                    </td>
+                    <td>{moneda(ingresos, event.currency)}</td>
+                    <td>
+                      <span className={eventoVigente(event) ? "badge badge-green" : "badge"}>
+                        {eventoVigente(event) ? "Vigente" : "Finalizado"}
+                      </span>
+                    </td>
+                    <td>
+                      <Link href={`/eventos/${event.slug}`} className="btn btn-secondary btn-sm" target="_blank">
+                        Ver publico ↗
                       </Link>
                     </td>
                   </tr>

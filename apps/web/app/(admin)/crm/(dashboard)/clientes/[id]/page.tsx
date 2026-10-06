@@ -3,12 +3,18 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { actualizarCliente, eliminarCliente } from "../actions";
+import { getFourvenuesTicketsByEmail } from "@/lib/fourvenues";
+import { moneda } from "@/lib/fv-admin";
+import { fechaCorta } from "@/lib/fv-format";
 
-const ORDEN_BADGE: Record<string, string> = {
-  pendiente: "badge badge-warning",
-  pagada: "badge badge-green",
-  fallida: "badge badge-danger",
+const TICKET_BADGE: Record<string, string> = {
+  active: "badge badge-green",
+  used: "badge",
+  refunded: "badge badge-danger",
+  cancelled: "badge badge-danger",
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function ClienteDetallePage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -26,14 +32,9 @@ export default async function ClienteDetallePage({ params }: { params: Promise<{
   const { data: usuario } = await admin.auth.admin.getUserById(id);
   const correo = usuario?.user?.email ?? "—";
 
-  const { data: ordenes } = await admin
-    .from("orders")
-    .select("id, total_cop, status, created_at, events(name)")
-    .eq("user_id", id)
-    .order("created_at", { ascending: false });
-
-  const items = ordenes ?? [];
-  const totalGastado = items.filter((o) => o.status === "pagada").reduce((acc, o) => acc + o.total_cop, 0);
+  const entradas = correo !== "—" ? await getFourvenuesTicketsByEmail(correo).catch(() => []) : [];
+  const validas = entradas.filter(({ ticket }) => ticket.status !== "refunded" && ticket.status !== "cancelled");
+  const totalGastado = validas.reduce((acc, { ticket }) => acc + (ticket.total_price || 0), 0);
   const actualizarClienteConId = actualizarCliente.bind(null, id);
 
   return (
@@ -50,12 +51,12 @@ export default async function ClienteDetallePage({ params }: { params: Promise<{
 
       <div className="stat-grid">
         <div className="stat-card">
-          <div className="value">{items.length}</div>
-          <div className="label">Pedidos</div>
+          <div className="value">{validas.length}</div>
+          <div className="label">Entradas</div>
         </div>
         <div className="stat-card">
-          <div className="value">${totalGastado.toLocaleString("es-CO")}</div>
-          <div className="label">Total gastado (pagados)</div>
+          <div className="value">{moneda(totalGastado)}</div>
+          <div className="label">Total gastado</div>
         </div>
       </div>
 
@@ -79,34 +80,33 @@ export default async function ClienteDetallePage({ params }: { params: Promise<{
         </form>
       </div>
 
-      <h2>Pedidos</h2>
-      {items.length === 0 ? (
-        <p className="empty-state">Este cliente todavia no ha hecho ningun pedido.</p>
+      <h2>Entradas (FourVenues)</h2>
+      {entradas.length === 0 ? (
+        <p className="empty-state">Este cliente todavia no tiene entradas compradas con este correo.</p>
       ) : (
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Fecha</th>
                 <th>Evento</th>
+                <th>Fecha</th>
+                <th>Localidad</th>
                 <th>Total</th>
                 <th>Estado</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((o) => {
-                const evento = o.events as unknown as { name: string } | null;
-                return (
-                  <tr key={o.id}>
-                    <td>{new Date(o.created_at).toLocaleString("es-CO", { timeZone: "America/Bogota" })}</td>
-                    <td>{evento?.name ?? "—"}</td>
-                    <td>${o.total_cop.toLocaleString("es-CO")}</td>
-                    <td>
-                      <span className={ORDEN_BADGE[o.status] ?? "badge"}>{o.status}</span>
-                    </td>
-                  </tr>
-                );
-              })}
+              {entradas.map(({ ticket, event }) => (
+                <tr key={ticket._id}>
+                  <td>{event.name}</td>
+                  <td>{fechaCorta(event)}</td>
+                  <td>{event.ticket_rates?.find((r) => r._id === ticket.ticket_rate_id)?.name ?? "—"}</td>
+                  <td>{moneda(ticket.total_price || 0, event.currency)}</td>
+                  <td>
+                    <span className={TICKET_BADGE[ticket.status] ?? "badge"}>{ticket.status}</span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -114,8 +114,7 @@ export default async function ClienteDetallePage({ params }: { params: Promise<{
 
       <h2>Eliminar cliente</h2>
       <p className="muted" style={{ maxWidth: "60ch" }}>
-        Elimina la cuenta y el acceso del cliente por completo. Sus pedidos anteriores quedan en el historial de
-        ordenes, pero ya no va a poder iniciar sesion. Esta accion no se puede deshacer.
+        Elimina la cuenta y el acceso del cliente por completo. Sus entradas siguen existiendo en FourVenues, pero ya no va a poder iniciar sesion. Esta accion no se puede deshacer.
       </p>
       <form action={eliminarCliente.bind(null, id)}>
         <button type="submit" className="btn btn-secondary btn-sm">

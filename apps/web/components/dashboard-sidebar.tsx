@@ -115,7 +115,7 @@ const NAV: Record<"admin" | "organizador" | "comprador", { href: string; label: 
     { href: "/crm/clientes", label: "Clientes", icon: "clientes" },
     { href: "/crm/organizadores", label: "Polinizadores", icon: "organizadores" },
     { href: "/crm/eventos", label: "Eventos", icon: "eventos" },
-    { href: "/crm/ordenes", label: "Ordenes de compra", icon: "ordenes" },
+    { href: "/crm/ordenes", label: "Tickets", icon: "ordenes" },
     { href: "/crm/pqrs", label: "PQRS", icon: "pqrs" },
     { href: "/crm/integraciones", label: "Integraciones", icon: "integraciones" },
   ],

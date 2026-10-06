@@ -7,11 +7,11 @@ export const metadata: Metadata = {
 const PREGUNTAS = [
   {
     q: "¿Cómo compro un boleto?",
-    a: "Busca el evento desde la portada o /eventos, entra al detalle del evento, elige el tipo de boleto y cantidad, y completa el pago con Bold. Tu boleto queda asociado a tu cuenta apenas el pago se confirma.",
+    a: "Busca el evento desde la portada o /eventos, entra al detalle del evento, elige el tipo de boleto y cantidad, y completa el pago en el checkout seguro de FourVenues. Tu boleto llega al correo con el que compraste y aparece en Mi cuenta.",
   },
   {
     q: "¿Con qué medios de pago puedo pagar?",
-    a: "El pago se procesa a través de Bold, una pasarela de pagos autorizada en Colombia que acepta tarjetas y otros medios habilitados en su plataforma.",
+    a: "El pago se procesa en el checkout de FourVenues, la plataforma de ticketing que opera nuestras ventas. Los medios de pago disponibles son los que muestra el checkout de cada evento.",
   },
   {
     q: "¿Dónde encuentro mis boletos después de comprar?",

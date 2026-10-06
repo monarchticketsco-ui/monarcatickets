@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
-import { requireComprador, getEventosAsignados } from "@/lib/admin";
+import { requireComprador } from "@/lib/admin";
 import { getFourvenuesTicketsByEmail, type FVEvent, type FVTicket } from "@/lib/fourvenues";
+import { fechaEvento, horarioEvento } from "@/lib/fv-format";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +15,7 @@ const ESTADO_BADGE: Record<string, string> = {
 export default async function MisEntradasPage() {
   const { user } = await requireComprador();
 
-  const eventosAsignados = await getEventosAsignados().catch(() => [] as string[]);
-  const entradas = user.email
-    ? await getFourvenuesTicketsByEmail(user.email, eventosAsignados).catch(() => [])
-    : [];
+  const entradas = user.email ? await getFourvenuesTicketsByEmail(user.email).catch(() => []) : [];
 
   // Los QR se generan como data URL en el servidor a partir del codigo
   // que entrega FourVenues (mismo patron que usabamos con Bold: nada se
@@ -59,7 +57,7 @@ export default async function MisEntradasPage() {
               <div>
                 <h2 style={{ margin: "0 0 2px" }}>{event.name}</h2>
                 <p className="muted" style={{ margin: 0 }}>
-                  {new Date(event.start_date).toLocaleString("es-CO", { timeZone: "America/Bogota", dateStyle: "long", timeStyle: "short" })}
+                  {fechaEvento(event)} · {horarioEvento(event)}
                   {" · "}
                   {event.location?.city}
                 </p>

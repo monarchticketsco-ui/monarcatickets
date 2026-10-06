@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireOrganizer, getEventoYTicketsDelOrganizador } from "@/lib/organizer";
+import { fechaEvento, horarioEvento } from "@/lib/fv-format";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function PanelResumenPage({
   const ingresos = vendidos.reduce((acc, t) => acc + (t.total_price || 0), 0);
 
   const diasParaElEvento = evento
-    ? Math.ceil((new Date(evento.start_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((new Date(evento.end_date || evento.start_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
 
   return (
@@ -42,11 +43,7 @@ export default async function PanelResumenPage({
               <small className="muted">TU EVENTO</small>
               <h2 style={{ margin: "6px 0" }}>{evento.name}</h2>
               <p className="muted" style={{ margin: 0 }}>
-                {new Date(evento.start_date).toLocaleString("es-CO", {
-                  timeZone: "America/Bogota",
-                  dateStyle: "full",
-                  timeStyle: "short",
-                })}
+                {fechaEvento(evento, "full")} · {horarioEvento(evento)}
                 <br />
                 {evento.location?.name ? `${evento.location.name} — ` : ""}
                 {evento.location?.city}, {evento.location?.country}

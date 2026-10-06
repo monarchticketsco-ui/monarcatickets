@@ -4,34 +4,34 @@ import { EmpresaLeadForm } from "./lead-form";
 
 export const metadata = {
   title: "Conviértete en Polinizador — Monarca Tickets",
-  description: "Vende boletos para tus eventos en Colombia con Monarca Tickets: pago seguro, control de aforo real y todo lo que exige la ley.",
+  description: "Vende boletos para tus eventos en Colombia con Monarca Tickets: checkout seguro, disponibilidad en tiempo real y acompañamiento para cumplir la ley.",
 };
 
 const BENEFICIOS = [
   {
     titulo: "Pagos seguros en línea",
-    texto: "Cobra con tarjeta, PSE, Nequi y más, con pasarela certificada. El dinero de tus ventas queda liquidado directo a tu cuenta.",
+    texto: "Tus asistentes pagan en el checkout seguro de FourVenues. La liquidación de tus ventas se coordina con Monarca Tickets.",
     icon: (
       <path d="M3 8h18M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Zm4 7h4" />
     ),
   },
   {
-    titulo: "Control de aforo real",
-    texto: "Cada boleto vendido descuenta cupo en tiempo real, sin sobreventa ni sorpresas el día del evento.",
+    titulo: "Disponibilidad en tiempo real",
+    texto: "Cada tipo de boleto muestra cupos disponibles y precio vigente directamente desde FourVenues, el motor de venta.",
     icon: (
       <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7-6a3 3 0 1 1 0 6M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7M16 14c3.5.4 6 3.3 6 7" />
     ),
   },
   {
     titulo: "Cumplimiento y PULEP",
-    texto: "Ficha técnica, responsable del evento y código PULEP en tu página pública, listos para las autoridades.",
+    texto: "Incluye tu código PULEP y los datos del responsable en la descripción del evento, visibles en tu página pública.",
     icon: (
       <path d="M12 3 4 6v6c0 4.6 3.2 8.4 8 9 4.8-.6 8-4.4 8-9V6l-8-3Zm-1.5 9.5 2 2 4-4" />
     ),
   },
   {
-    titulo: "Pagos cashless en el evento",
-    texto: "Pulseras o tarjetas prepago para que tus asistentes paguen comida, bebidas y merchandising sin efectivo ni filas en caja.",
+    titulo: "Cashless (próximamente)",
+    texto: "Pagos sin efectivo dentro del evento: módulo en desarrollo, aún no disponible.",
     icon: (
       <>
         <path d="M3 7h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm0 0 2-3h14l2 3M7 15h4" />
@@ -48,8 +48,8 @@ export default function EmpresasPage() {
         <p className="event-card-eyebrow">Monarca para organizadores</p>
         <h1>Conviértete en un Polinizador</h1>
         <p className="page-lede">
-          Tú creas la experiencia. Monarca te da el ecosistema para venderla: cobro en línea, control de aforo real
-          y boletos digitales, todo desde tu propio panel.
+          Tú creas la experiencia. Monarca te da el ecosistema para venderla: venta en línea con FourVenues,
+          boletos digitales y un panel para seguir tus ventas.
         </p>
       </div>
 
@@ -77,22 +77,10 @@ export default function EmpresasPage() {
       </div>
 
       <section className="event-section" style={{ margin: "8px 0 32px" }}>
-        <h2>Cashless: pagos sin efectivo dentro de tu evento</h2>
-        <p className="page-lede" style={{ marginBottom: 16 }}>
-          Ademas de vender la entrada, Monarca Tickets tambien puede operar el consumo interno de tu evento con
-          pulseras o tarjetas prepago, para que tus asistentes paguen comida, bebidas y merchandising sin efectivo
-          ni filas en caja.
-        </p>
-        <div className="prose">
-          <ul>
-            <li><strong>Recarga en punto o desde el celular</strong> — tus asistentes cargan saldo antes o durante el evento.</li>
-            <li><strong>Cero efectivo en barra</strong> — cada punto de venta cobra con lectura NFC, mas rapido que una caja tradicional.</li>
-            <li><strong>Consumo en tiempo real</strong> — ves cuanto se esta vendiendo en cada punto mientras el evento sucede.</li>
-            <li><strong>Liquidacion despues del evento</strong> — el saldo no gastado se reintegra y te entregamos el corte de ventas por punto.</li>
-          </ul>
-        </div>
-        <p className="muted" style={{ margin: "12px 0 0" }}>
-          ¿Tu evento necesita cashless? Cuentanoslo por WhatsApp y lo dejamos listo junto con tus boletos.
+        <h2>Cashless: próximamente</h2>
+        <p className="page-lede" style={{ marginBottom: 0 }}>
+          Estamos trabajando en pagos sin efectivo dentro del evento. Todavía no está disponible; te avisaremos
+          cuando esté listo para operar.
         </p>
       </section>
 

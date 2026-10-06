@@ -59,7 +59,7 @@ export function HeroCarousel({ eventos }: { eventos: EventoDestacado[] }) {
         <div className="hero-empty">
           <h1>El ticket que se transforma en experiencia.</h1>
           <p className="page-lede" style={{ marginBottom: 20 }}>
-            Boletos para eventos en Colombia, con control de aforo real y pago seguro con Bold.
+            Boletos para eventos en Colombia, con disponibilidad en tiempo real y checkout seguro de FourVenues.
           </p>
           <MagneticButton>
             <Link href="/eventos" className="btn btn-primary">
