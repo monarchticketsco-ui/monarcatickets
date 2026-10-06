@@ -1,7 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { MobileNavToggle } from "@/components/mobile-nav-toggle";
+import { MqNavLinks } from "@/components/mq-nav-links";
 
 export async function SiteHeader() {
   const supabase = await createClient();
@@ -11,66 +10,41 @@ export async function SiteHeader() {
 
   let role: string | null = null;
   if (user) {
-    const { data: perfil } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const { data: perfil } = await supabase.from("profiles").select("role").eq("id", user.id).single();
     role = perfil?.role ?? null;
   }
 
   return (
-    <header className="site-header">
-      <div className="site-header-inner">
-        <Link href="/" className="brand" aria-label="Monarca Tickets — inicio">
-          <Image src="/logo.png" alt="Monarca Tickets" width={152} height={32} priority />
-        </Link>
-        <Link href="/" className="brand-icon" aria-label="Monarca Tickets — inicio">
-          <Image src="/logo-icon.png" alt="" width={35} height={28} priority />
-        </Link>
-        <MobileNavToggle>
-          <Link href="/eventos" className="nav-link">
-            Eventos
+    <header className="mq-scope mq-nav">
+      <Link href="/" className="mq-brand" aria-label="Monarca Tickets — inicio">
+        <i className="mq-brand-mark" />
+        <div>
+          MONARCA
+          <small>TICKETS</small>
+        </div>
+      </Link>
+      <MqNavLinks>
+        <Link href="/">Inicio</Link>
+        <Link href="/empresas">Organizadores</Link>
+        <Link href="/eventos">Eventos</Link>
+        <Link href="/soporte">Soporte</Link>
+        {user ? (
+          <>
+            <Link href="/mi-cuenta">Mi cuenta</Link>
+            {role === "organizador" && <Link href="/panel">Panel</Link>}
+            {role === "admin" && <Link href="/crm">Panel</Link>}
+            <form action="/logout" method="post">
+              <button type="submit" className="mq-btn">
+                Salir
+              </button>
+            </form>
+          </>
+        ) : (
+          <Link href="/login" className="mq-btn">
+            Log In
           </Link>
-          <Link href="/calendario-fourvenues" className="nav-link">
-            Calendario
-          </Link>
-          <Link href="/soporte" className="nav-link">
-            Soporte
-          </Link>
-          {user ? (
-            <>
-              <Link href="/mi-cuenta" className="nav-link">
-                Mi cuenta
-              </Link>
-              {role === "organizador" && (
-                <Link href="/panel" className="nav-link">
-                  Panel
-                </Link>
-              )}
-              {role === "admin" && (
-                <Link href="/crm" className="nav-link">
-                  Panel
-                </Link>
-              )}
-              <form action="/logout" method="post">
-                <button type="submit" className="btn btn-secondary btn-sm">
-                  Salir
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <Link href="/empresas" className="nav-link">
-                Portal empresas
-              </Link>
-              <Link href="/personas" className="btn btn-primary btn-sm">
-                Portal personas
-              </Link>
-            </>
-          )}
-        </MobileNavToggle>
-      </div>
+        )}
+      </MqNavLinks>
     </header>
   );
 }

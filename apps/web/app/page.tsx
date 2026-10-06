@@ -1,43 +1,12 @@
 import Link from "next/link";
-import { HeroCarousel } from "@/components/hero-carousel";
-import { EventSearchBar } from "@/components/event-search-bar";
-import { Reveal } from "@/components/reveal";
-import { imagenDeEvento } from "@/lib/event-visuals";
-import { BLOG_POSTS } from "@/lib/blog-posts";
 import { getFourvenuesEvents } from "@/lib/fourvenues";
 import { eventoVigente } from "@/lib/fv-format";
 
-const CATEGORIAS_HOME = [
-  {
-    etiqueta: "Conciertos",
-    categoria: "Concierto",
-    icon: <path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />,
-  },
-  {
-    etiqueta: "Deportes",
-    categoria: "Deportivo",
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 3v6m0 6v6M4.2 7.8l5.3 3.9M14.5 12.3l5.3 3.9M4.2 16.2l5.3-3.9M14.5 11.7l5.3-3.9" />
-      </>
-    ),
-  },
-  {
-    etiqueta: "Familiares",
-    categoria: "Familiar",
-    icon: <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7-6a3 3 0 1 1 0 6M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7M16 14c3.5.4 6 3.3 6 7" />,
-  },
-  {
-    etiqueta: "Fiestas",
-    categoria: "Festival",
-    icon: <path d="m12 2 2.2 6.8H21l-5.6 4 2.2 6.8L12 15.6l-5.6 4 2.2-6.8L3 8.8h6.8L12 2Z" />,
-  },
-] as const;
+export const dynamic = "force-dynamic";
 
-// Shuffle deterministico (mismo resultado en server y cliente) para que
-// "Recomendados" no muestre el mismo orden cronologico que "Proximos
-// eventos" — se siente curado en vez de una copia de la misma lista.
+const TZ = "America/Bogota";
+const COLORES = ["#176bff", "#1ed7dd", "#35e27b", "#725cff", "#1188ff", "#20d6a4"];
+
 function hashString(input: string): number {
   let hash = 0;
   for (let i = 0; i < input.length; i++) {
@@ -47,202 +16,244 @@ function hashString(input: string): number {
   return Math.abs(hash);
 }
 
-export const dynamic = "force-dynamic";
+function diaMes(iso: string): string {
+  return new Date(iso)
+    .toLocaleDateString("es-CO", { day: "2-digit", month: "short", timeZone: TZ })
+    .replace(".", "")
+    .toUpperCase();
+}
+
+const CUENTA = [
+  {
+    titulo: "Todo desde tu cuenta",
+    texto: "Consulta tus entradas y el historial de tus eventos desde un solo lugar.",
+    pronto: false,
+  },
+  { titulo: "Cashless Monarca", texto: "Recarga saldo antes del evento y disfruta sin efectivo.", pronto: true },
+  { titulo: "Tu manilla. Tu cuenta.", texto: "Vincula tu manilla Monarca a tu perfil y administra tu saldo.", pronto: true },
+  {
+    titulo: "Tu saldo bajo control",
+    texto: "Consulta tus consumos y administra tu saldo después del evento.",
+    pronto: true,
+  },
+];
 
 export default async function HomePage() {
-  // Catalogo en vivo desde FourVenues (Channel Manager API) -- igual que
-  // /eventos, esta pagina dejo de leer la tabla local `events`. FourVenues
-  // no tiene concepto de "categoria", por eso queda siempre en null (el
-  // filtro de /eventos?categoria=X tampoco filtra por ahora, ver esa
-  // pagina).
+  // Los eventos vienen siempre de FourVenues (motor de ticketing). Nada de esta
+  // portada es dato propio: si FourVenues no tiene eventos vigentes, se dice.
   const eventosFV = await getFourvenuesEvents().catch(() => []);
 
-  const todos = eventosFV.map((e) => ({
-    id: e.slug,
-    name: e.name,
-    venue: e.location?.name ?? "",
-    city: e.location?.city ?? "",
-    starts_at: e.display_date || e.start_date,
-    vigente: eventoVigente(e),
-    category: null as string | null,
-    image_url: e.image_url || null,
-  }));
-
-  const conFecha = todos
-    .filter((e) => e.vigente)
-    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
+  const eventos = eventosFV
+    .filter((e) => eventoVigente(e))
     .map((e) => ({
-      ...e,
-      fecha: new Date(e.starts_at).toLocaleDateString("es-CO", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        timeZone: "America/Bogota",
-      }),
-    }));
+      slug: e.slug,
+      name: e.name,
+      city: e.location?.city ?? "",
+      fecha: e.display_date || e.start_date,
+      inicio: e.start_date,
+      image: e.image_url || null,
+    }))
+    .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
-  const destacados = conFecha.slice(0, 6);
-  const recomendados = [...conFecha].sort((a, b) => hashString(a.id) - hashString(b.id)).slice(0, 4);
-  const proximos = conFecha.slice(0, 20);
-  const ciudades = Array.from(new Set(todos.map((e) => e.city).filter(Boolean))).sort();
+  const ciudades = Array.from(new Set(eventosFV.map((e) => e.location?.city).filter(Boolean) as string[])).sort();
+  const proximo = eventos[0];
+  const destacados = eventos.slice(0, 12);
+  const usarMarquee = destacados.length >= 5;
+
+  const tarjeta = (e: (typeof destacados)[number], key: string) => (
+    <Link
+      key={key}
+      href={`/eventos/${e.slug}`}
+      className="mq-ev"
+      style={
+        {
+          "--c": COLORES[hashString(e.slug) % COLORES.length],
+          ...(e.image
+            ? { backgroundImage: `linear-gradient(180deg, transparent 25%, #040812ee), url("${e.image}")` }
+            : {}),
+        } as React.CSSProperties
+      }
+    >
+      <b>{e.name}</b>
+      <span>
+        {diaMes(e.fecha)}
+        {e.city ? ` · ${e.city}` : ""}
+      </span>
+    </Link>
+  );
+
+  const pista = (lista: typeof destacados, reverse: boolean, prefix: string) => {
+    // Se repite hasta cubrir el ancho y se duplica para que el bucle sea continuo.
+    let base = lista;
+    while (base.length < 8) base = base.concat(lista);
+    const doble = base.concat(base);
+    return (
+      <div className="mq-marquee">
+        <div className={`mq-track${reverse ? " mq-reverse" : ""}`}>
+          {doble.map((e, i) => tarjeta(e, `${prefix}-${i}`))}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <main className="home-sections">
-      <div className="container-x">
-        <EventSearchBar ciudades={ciudades} />
-      </div>
+    <main className="mq-scope mq-home">
+      <div className="mq-noise" aria-hidden="true" />
 
-      <div className="container-x">
-        <Reveal>
-          <HeroCarousel eventos={destacados} />
-        </Reveal>
-      </div>
-
-      {recomendados.length > 0 && (
-        <div className="container-x">
-          <Reveal depth={false}>
-            <div className="section-head">
-              <h2>Recomendados para ti</h2>
-              <Link href="/eventos" className="nav-link">
-                Ver todos →
-              </Link>
-            </div>
-            <p className="recomendados-note">Una selección variada, distinta de tus próximos eventos por fecha.</p>
-            <div className="recomendados-grid">
-              {recomendados.map((e) => (
-                <Link href={`/eventos/${e.id}`} key={e.id} className="recomendado-card">
-                  <img
-                    src={e.image_url || imagenDeEvento(e.id, e.category, 500)}
-                    alt=""
-                    decoding="async"
-                  />
-                  <span className="recomendado-badge">Recomendado</span>
-                  <div className="recomendado-body">
-                    {e.category && <p className="event-card-eyebrow">{e.category}</p>}
-                    <h3>{e.name}</h3>
-                    <p>
-                      {e.city} · {e.fecha}
-                    </p>
-                  </div>
-                </Link>
+      <section className="mq-container mq-hero" style={{ position: "relative", zIndex: 2 }}>
+        <div>
+          <div className="mq-eyebrow">MONARCA TICKETS · COLOMBIA</div>
+          <h1>
+            Vive más.
+            <br />
+            <span className="mq-gradient-text">Nosotros movemos el acceso.</span>
+          </h1>
+          <p className="mq-lead">
+            Descubre experiencias, administra tus entradas y llega al evento con todo listo desde un mismo lugar.
+          </p>
+          <form className="mq-searchbox" action="/eventos" method="get">
+            <input name="q" type="search" placeholder="Evento, artista o lugar" aria-label="Evento, artista o lugar" />
+            <select name="ciudad" aria-label="Ciudad" defaultValue="">
+              <option value="">Ciudad</option>
+              {ciudades.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
-            </div>
-          </Reveal>
+            </select>
+            <input name="fecha" type="date" aria-label="Fecha" />
+            <button type="submit" className="mq-btn mq-primary">
+              Buscar
+            </button>
+          </form>
         </div>
-      )}
 
-      <div className="container-x">
-        <Reveal depth={false}>
-          <div className="section-head">
-            <h2>Próximos eventos</h2>
-            <Link href="/eventos" className="nav-link">
-              Ver todos →
-            </Link>
+        <div className="mq-hero-visual" aria-hidden="true">
+          <div className="mq-orb" />
+          <div className="mq-ticket mq-big">
+            <div className="mq-eyebrow">TICKET DIGITAL</div>
+            {proximo ? (
+              <>
+                <h2>{proximo.name}</h2>
+                <p className="mq-sub">{proximo.city || "Colombia"}</p>
+                <div className="mq-line" />
+                <div className="mq-row">
+                  <div>
+                    <small>
+                      {new Date(proximo.fecha)
+                        .toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric", timeZone: TZ })
+                        .replace(".", "")
+                        .toUpperCase()}
+                    </small>
+                    <br />
+                    <span className="mq-time">
+                      {new Date(proximo.inicio).toLocaleTimeString("es-CO", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                        timeZone: TZ,
+                      })}
+                    </span>
+                  </div>
+                  <div className="mq-qr" />
+                </div>
+              </>
+            ) : (
+              <>
+                <h2>
+                  Tu próximo
+                  <br />
+                  evento
+                </h2>
+                <p className="mq-sub">Colombia</p>
+                <div className="mq-line" />
+                <div className="mq-row">
+                  <div>
+                    <small>MUY PRONTO</small>
+                  </div>
+                  <div className="mq-qr" />
+                </div>
+              </>
+            )}
           </div>
-
-          {proximos.length === 0 ? (
-            <p className="empty-state">No hay eventos en venta todavia.</p>
-          ) : (
-            <ul className="event-grid">
-              {proximos.map((e) => (
-                <li key={e.id}>
-                  <Link href={`/eventos/${e.id}`} className="event-card">
-                    <div className="event-card-media">
-                      <img
-                        src={e.image_url || imagenDeEvento(e.id, e.category, 500)}
-                        alt=""
-                        decoding="async"
-                      />
-                      {e.category && <p className="event-card-eyebrow">{e.category}</p>}
-                    </div>
-                    <div className="event-card-body">
-                      <h3>{e.name}</h3>
-                      <p className="muted">
-                        {e.city} ·{" "}
-                        {new Date(e.starts_at).toLocaleDateString("es-CO", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          timeZone: "America/Bogota",
-                        })}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Reveal>
-      </div>
-
-      <div className="category-band">
-        <div className="container-x">
-        <Reveal depth={false}>
-          <div className="section-head">
-            <h2>Explora por categoría</h2>
+          <div className="mq-ticket mq-small">
+            <div className="mq-wingline" />
+            <h3>
+              Tu experiencia
+              <br />
+              comienza aquí.
+            </h3>
+            <small className="mq-tagline">Accede · Vive · Recuerda</small>
           </div>
-          <div className="category-grid">
-            {CATEGORIAS_HOME.map((c) => (
-              <Link
-                key={c.categoria}
-                href={`/eventos?categoria=${encodeURIComponent(c.categoria)}`}
-                className="category-tile"
-              >
-                <img src={imagenDeEvento(c.categoria, c.categoria, 500)} alt="" />
-                <svg
-                  className="category-tile-icon"
-                  width="26"
-                  height="26"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  {c.icon}
-                </svg>
-                <h3>{c.etiqueta}</h3>
-              </Link>
+        </div>
+      </section>
+
+      <section className="mq-section">
+        <div className="mq-container">
+          <div className="mq-eyebrow">PRÓXIMAS EXPERIENCIAS</div>
+          <h2>Eventos destacados</h2>
+        </div>
+        {destacados.length === 0 ? (
+          <div className="mq-container">
+            <div className="mq-empty">Estamos preparando los próximos eventos. Vuelve pronto.</div>
+          </div>
+        ) : usarMarquee ? (
+          <>
+            {pista(destacados, false, "a")}
+            {pista([...destacados].reverse(), true, "b")}
+          </>
+        ) : (
+          <div className="mq-container">
+            <div className="mq-static-row">{destacados.map((e) => tarjeta(e, e.slug))}</div>
+          </div>
+        )}
+        <div className="mq-container mq-more">
+          <Link href="/eventos" className="mq-btn">
+            Ver todos los eventos →
+          </Link>
+        </div>
+      </section>
+
+      <section className="mq-section">
+        <div className="mq-container">
+          <div className="mq-eyebrow">TU CUENTA MONARCA</div>
+          <h2>
+            Tu evento, más simple
+            <br />
+            de principio a fin.
+          </h2>
+          <div className="mq-benefits">
+            {CUENTA.map((x, i) => (
+              <div className="mq-card" key={x.titulo}>
+                <div className="mq-icon-dot" />
+                <small>
+                  0{i + 1}
+                  {x.pronto && <span className="mq-soon">Próximamente</span>}
+                </small>
+                <h3>{x.titulo}</h3>
+                <p>{x.texto}</p>
+              </div>
             ))}
           </div>
-        </Reveal>
         </div>
-      </div>
+      </section>
 
-      <div className="blog-band">
-        <div className="container-x">
-          <Reveal depth={false}>
-            <div className="section-head">
-              <h2>Desde el blog</h2>
-              <Link href="/blog" className="nav-link">
-                Ver todos →
-              </Link>
-            </div>
-            <ul className="blog-grid">
-              {BLOG_POSTS.slice(0, 5).map((post) => (
-                <li key={post.slug}>
-                  <Link href={`/blog/${post.slug}`} className="blog-card">
-                    <div className="blog-card-media">
-                      <img
-                        src={`https://images.unsplash.com/photo-${post.imagenId}?w=700&q=70&auto=format&fit=crop`}
-                        alt=""
-                      />
-                    </div>
-                    <div className="blog-card-body">
-                      <p className="blog-card-tag">{post.categoria}</p>
-                      <h3>{post.titulo}</h3>
-                      <p>{post.extracto}</p>
-                      <p className="blog-card-meta">{post.minutosLectura} min de lectura</p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
+      <section className="mq-section">
+        <div className="mq-container mq-cta-panel">
+          <div>
+            <div className="mq-eyebrow">MONARCA PARA ORGANIZADORES</div>
+            <h2>
+              Tu evento merece más
+              <br />
+              que una ticketera.
+            </h2>
+            <p className="mq-section-copy">Vende, administra y entiende tu evento desde un solo ecosistema.</p>
+          </div>
+          <Link href="/empresas" className="mq-btn mq-primary">
+            Conoce Monarca para Organizadores
+          </Link>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
