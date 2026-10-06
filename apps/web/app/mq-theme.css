@@ -37,6 +37,14 @@
 .mq-burger { display: none; background: transparent; border: 1px solid #263650; border-radius: 12px; width: 42px; height: 42px; cursor: pointer; flex-direction: column; justify-content: center; align-items: center; gap: 5px; padding: 0; }
 .mq-burger span { display: block; width: 18px; height: 2px; background: #dbe3ef; border-radius: 2px; }
 
+/* Logos oficiales */
+.mq-logo { display: flex; align-items: center; flex: none; }
+.mq-logo img { height: 32px; width: auto; display: block; }
+.mq-logo-icon { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; }
+.mq-logo-icon img { height: 30px; width: auto; display: block; filter: drop-shadow(0 0 16px rgba(53,226,123,.3)); }
+.mq-footer-logos { display: flex; align-items: center; gap: 16px; }
+.mq-footer-logos img { height: 32px; width: auto; display: block; }
+
 /* ---------- Botones ---------- */
 .mq-btn {
   border-radius: 999px; padding: 13px 19px; background: #111d31; color: #fff !important; font-weight: 600; font-size: 14px;
@@ -127,6 +135,7 @@
 .mq-scope .mq-footer-legal { margin-top: 40px; padding-top: 22px; border-top: 1px solid #152238; font-size: 12px; color: #607087; line-height: 1.6; }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 1100px) { .mq-logo-icon { display: none; } }
 @media (max-width: 850px) {
   .mq-burger { display: flex; }
   .mq-navlinks { display: none; position: absolute; top: 78px; left: 0; right: 0; flex-direction: column; align-items: flex-start; gap: 18px; padding: 22px 5vw 26px; background: rgba(3,8,18,.97); border-bottom: 1px solid #152238; }

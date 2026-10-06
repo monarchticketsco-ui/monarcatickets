@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MqNavLinks } from "@/components/mq-nav-links";
@@ -16,12 +17,11 @@ export async function SiteHeader() {
 
   return (
     <header className="mq-scope mq-nav">
-      <Link href="/" className="mq-brand" aria-label="Monarca Tickets — inicio">
-        <i className="mq-brand-mark" />
-        <div>
-          MONARCA
-          <small>TICKETS</small>
-        </div>
+      <Link href="/" className="mq-logo" aria-label="Monarca Tickets — inicio">
+        <Image src="/logo.png" alt="Monarca Tickets" width={152} height={32} priority />
+      </Link>
+      <Link href="/" className="mq-logo-icon" aria-label="Monarca Tickets — inicio">
+        <Image src="/logo-icon.png" alt="" width={38} height={30} priority />
       </Link>
       <MqNavLinks>
         <Link href="/">Inicio</Link>

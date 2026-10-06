@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function SiteFooter() {
@@ -6,12 +7,9 @@ export function SiteFooter() {
       <div className="mq-container">
         <div className="mq-footer-grid">
           <div>
-            <div className="mq-brand">
-              <i className="mq-brand-mark" />
-              <div>
-                MONARCA
-                <small>TICKETS</small>
-              </div>
+            <div className="mq-footer-logos">
+              <Image src="/logo.png" alt="Monarca Tickets" width={152} height={32} />
+              <Image src="/logo-icon.png" alt="" width={38} height={30} />
             </div>
             <p className="mq-footer-note">Acceso, movimiento, transformación, experiencia.</p>
           </div>
