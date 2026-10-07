@@ -9,7 +9,6 @@ export function SiteFooter() {
           <div>
             <div className="mq-footer-logos">
               <Image src="/logo.png" alt="Monarca Tickets" width={152} height={32} />
-              <Image src="/logo-icon.png" alt="" width={38} height={30} />
             </div>
             <p className="mq-footer-note">Acceso, movimiento, transformación, experiencia.</p>
           </div>
