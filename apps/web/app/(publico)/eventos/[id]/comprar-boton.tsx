@@ -46,8 +46,8 @@ export function ComprarBoton({
     for (let i = 0; i < asistentes.length; i++) {
       const { nombre, email, telefono } = asistentes[i];
       if (nombre.trim().length < 3) return `Escribe el nombre completo del asistente ${i + 1}.`;
-      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return `El correo del asistente ${i + 1} no es valido.`;
-      if (!/^[0-9]{7,15}$/.test(telefono.trim())) return `El telefono del asistente ${i + 1} debe ser solo numeros (7 a 15 digitos).`;
+      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return `El correo del asistente ${i + 1} no es válido.`;
+      if (!/^[0-9]{7,15}$/.test(telefono.trim())) return `El teléfono del asistente ${i + 1} debe ser solo números (7 a 15 dígitos).`;
     }
     return null;
   }
@@ -94,66 +94,63 @@ export function ComprarBoton({
 
   if (paso === "cantidad") {
     return (
-      <div>
-        <div className="qty-form">
+      <div className="mq-buyform">
+        <div className="mq-qty">
           <input
             type="number"
             min={1}
             max={maximo}
             value={cantidad}
-            onChange={(e) => setCantidad(Math.max(1, Math.min(maximo, Number(e.target.value))))}
+            onChange={(e) => setCantidad(Math.max(1, Math.min(maximo, Number(e.target.value) || 1)))}
             aria-label="Cantidad"
           />
-          <button onClick={continuar} className="btn btn-primary">
+          <button type="button" onClick={continuar} className="mq-btn mq-primary">
             Continuar
           </button>
         </div>
-        {feeCop > 0 && (
-          <p className="muted" style={{ fontSize: "0.78rem", margin: "6px 0 0" }}>
-            Total con servicio: ${totalCop.toLocaleString("es-CO")}
-          </p>
-        )}
+        {feeCop > 0 && <p className="mq-total-note">Total con servicio: ${totalCop.toLocaleString("es-CO")}</p>}
       </div>
     );
   }
 
   return (
-    <div className="asistentes-form">
+    <div className="mq-buyform">
       {asistentes.map((a, i) => (
-        <div key={i} className="asistente-row">
-          <p className="muted" style={{ margin: "0 0 4px", fontSize: "0.8rem" }}>
-            Asistente {i + 1}
-          </p>
+        <div key={i} className="mq-attendee">
+          <small>Asistente {i + 1}</small>
           <input
             type="text"
             placeholder="Nombre completo"
+            autoComplete="name"
             value={a.nombre}
             onChange={(e) => actualizarAsistente(i, "nombre", e.target.value)}
           />
           <input
             type="email"
             placeholder="Correo"
+            autoComplete="email"
             value={a.email}
             onChange={(e) => actualizarAsistente(i, "email", e.target.value)}
           />
           <input
             type="tel"
-            placeholder="Telefono"
+            placeholder="Teléfono"
+            autoComplete="tel"
             value={a.telefono}
             onChange={(e) => actualizarAsistente(i, "telefono", e.target.value)}
           />
         </div>
       ))}
       {error && (
-        <p className="muted" style={{ color: "var(--danger)", fontSize: "0.8rem" }}>
+        <p className="mq-error" role="alert">
           {error}
         </p>
       )}
-      <div className="qty-form">
-        <button onClick={() => setPaso("cantidad")} className="btn" disabled={cargando}>
-          Atras
+      <div className="mq-qty">
+        <button type="button" onClick={() => setPaso("cantidad")} className="mq-btn" disabled={cargando} style={{ flex: "0 0 auto" }}>
+          Atrás
         </button>
-        <button onClick={pagar} className="btn btn-primary" disabled={cargando}>
+        <button type="button" onClick={pagar} className="mq-btn mq-primary" disabled={cargando}>
           {cargando ? "Redirigiendo..." : `Pagar $${totalCop.toLocaleString("es-CO")}`}
         </button>
       </div>

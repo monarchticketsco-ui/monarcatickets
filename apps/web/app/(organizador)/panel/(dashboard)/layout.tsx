@@ -1,13 +1,22 @@
 import { requireOrganizer } from "@/lib/organizer";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { DashboardShell } from "@/components/dashboard-shell";
+import { getFourvenuesEventById } from "@/lib/fourvenues";
 
 export default async function PanelDashboardLayout({ children }: { children: React.ReactNode }) {
   const { organizer } = await requireOrganizer();
+  const evento = organizer.fourvenues_event_id
+    ? await getFourvenuesEventById(organizer.fourvenues_event_id).catch(() => null)
+    : null;
 
   return (
-    <main className="container dashboard-shell">
-      <DashboardSidebar role="organizador" titulo={organizer.legal_name} />
-      <div className="dashboard-main">{children}</div>
-    </main>
+    <DashboardShell
+      role="organizador"
+      titulo="Panel de Polinizador"
+      evento={evento?.name ?? null}
+      etiqueta={evento ? `${organizer.legal_name} · ${evento.name}` : organizer.legal_name}
+      inicial={organizer.legal_name}
+    >
+      {children}
+    </DashboardShell>
   );
 }

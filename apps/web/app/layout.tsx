@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { WhatsAppWidget } from "@/components/whatsapp-widget";
 import "./globals.css";
 import "./mq-theme.css";
+import "./mq-app.css";
 
 const chakraPetch = Chakra_Petch({
   subsets: ["latin"],

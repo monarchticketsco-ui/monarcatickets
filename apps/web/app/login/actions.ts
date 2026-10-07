@@ -10,6 +10,9 @@ export async function login(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
   const captchaToken = formData.get("captchaToken");
+  // Solo es una pista de la pantalla (ASISTENTE | ORGANIZADOR): quien manda es
+  // el rol de la cuenta en la base de datos, nunca lo que se marque aqui.
+  const acceso = String(formData.get("acceso") ?? "asistente");
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -18,7 +21,7 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    redirect(`/login?acceso=${acceso}&error=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/", "layout");
@@ -39,6 +42,17 @@ export async function login(formData: FormData) {
       .eq("owner_user_id", userId)
       .maybeSingle();
     if (organizador) redirect("/panel");
+
+    // Marco ORGANIZADOR pero la cuenta no tiene panel de Polinizador: se
+    // cierra la sesion y se explica, en vez de mandarlo a Mi cuenta sin aviso.
+    if (acceso === "organizador") {
+      await supabase.auth.signOut();
+      redirect(
+        `/login?acceso=organizador&error=${encodeURIComponent(
+          "Esta cuenta no tiene acceso de organizador. Ingresa como asistente o escríbenos desde Soporte."
+        )}`
+      );
+    }
   }
 
   redirect("/mi-cuenta");

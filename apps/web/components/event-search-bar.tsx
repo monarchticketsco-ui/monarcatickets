@@ -1,56 +1,31 @@
-import { CATEGORIAS } from "@/lib/event-visuals";
-import { MagneticButton } from "@/components/magnetic-button";
-
 export function EventSearchBar({
   ciudades,
   defaultValues,
 }: {
   ciudades: string[];
-  defaultValues?: { q?: string; ciudad?: string; fecha?: string; categoria?: string };
+  defaultValues?: { q?: string; ciudad?: string; fecha?: string };
 }) {
   return (
-    <form className="search-bar" action="/eventos" method="get">
-      <div className="search-field" style={{ flexBasis: 220 }}>
-        <label htmlFor="q">Evento, artista o lugar</label>
-        <input
-          id="q"
-          name="q"
-          type="search"
-          placeholder="Buscar..."
-          defaultValue={defaultValues?.q ?? ""}
-        />
-      </div>
-      <div className="search-field">
-        <label htmlFor="ciudad">Ciudad</label>
-        <select id="ciudad" name="ciudad" defaultValue={defaultValues?.ciudad ?? ""}>
-          <option value="">Cualquier ciudad</option>
-          {ciudades.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="search-field">
-        <label htmlFor="fecha">Fecha</label>
-        <input id="fecha" name="fecha" type="date" defaultValue={defaultValues?.fecha ?? ""} />
-      </div>
-      <div className="search-field">
-        <label htmlFor="categoria">Categoría</label>
-        <select id="categoria" name="categoria" defaultValue={defaultValues?.categoria ?? ""}>
-          <option value="">Cualquier categoría</option>
-          {CATEGORIAS.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-      <MagneticButton>
-        <button type="submit" className="btn btn-primary">
-          Buscar
-        </button>
-      </MagneticButton>
+    <form className="mq-searchbox mq-searchbox-page" action="/eventos" method="get">
+      <input
+        name="q"
+        type="search"
+        placeholder="Evento, artista o lugar"
+        aria-label="Evento, artista o lugar"
+        defaultValue={defaultValues?.q ?? ""}
+      />
+      <select name="ciudad" aria-label="Ciudad" defaultValue={defaultValues?.ciudad ?? ""}>
+        <option value="">Ciudad</option>
+        {ciudades.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
+      <input name="fecha" type="date" aria-label="Fecha" defaultValue={defaultValues?.fecha ?? ""} />
+      <button type="submit" className="mq-btn mq-primary">
+        Buscar
+      </button>
     </form>
   );
 }

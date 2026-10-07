@@ -112,10 +112,10 @@ type IconKey = keyof typeof ICONS;
 const NAV: Record<"admin" | "organizador" | "comprador", { href: string; label: string; icon: IconKey; exact?: boolean }[]> = {
   admin: [
     { href: "/crm", label: "Dashboard", icon: "dashboard", exact: true },
-    { href: "/crm/clientes", label: "Clientes", icon: "clientes" },
+    { href: "/crm/clientes", label: "Usuarios", icon: "clientes" },
     { href: "/crm/organizadores", label: "Polinizadores", icon: "organizadores" },
     { href: "/crm/eventos", label: "Eventos", icon: "eventos" },
-    { href: "/crm/ordenes", label: "Tickets", icon: "ordenes" },
+    { href: "/crm/ordenes", label: "Órdenes", icon: "ordenes" },
     { href: "/crm/pqrs", label: "PQRS", icon: "pqrs" },
     { href: "/crm/integraciones", label: "Integraciones", icon: "integraciones" },
   ],
@@ -123,7 +123,6 @@ const NAV: Record<"admin" | "organizador" | "comprador", { href: string; label: 
     { href: "/panel", label: "Resumen", icon: "dashboard", exact: true },
     { href: "/panel/mi-evento", label: "Mi evento", icon: "eventos" },
     { href: "/panel/ventas", label: "Ventas & Tickets", icon: "ticket" },
-    { href: "/panel/liquidaciones", label: "Liquidaciones", icon: "ordenes" },
     { href: "/panel/asistentes", label: "Asistentes", icon: "clientes" },
     { href: "/panel/accesos", label: "Accesos", icon: "acceso" },
     { href: "/panel/cashless", label: "Cashless", icon: "wallet" },
@@ -139,13 +138,27 @@ const NAV: Record<"admin" | "organizador" | "comprador", { href: string; label: 
   ],
 };
 
-export function DashboardSidebar({ role, titulo }: { role: "admin" | "organizador" | "comprador"; titulo: string }) {
+export function DashboardSidebar({
+  role,
+  titulo,
+  evento,
+}: {
+  role: "admin" | "organizador" | "comprador";
+  titulo: string;
+  evento?: string;
+}) {
   const pathname = usePathname();
   const items = NAV[role];
 
   return (
     <aside className="dashboard-sidebar">
       <div className="dashboard-sidebar-title">{titulo}</div>
+      {evento && (
+        <div className="dashboard-sidebar-event">
+          <small>Evento</small>
+          {evento}
+        </div>
+      )}
       <nav className="dashboard-sidebar-nav">
         {items.map((item) => {
           const activo = item.exact
@@ -160,6 +173,10 @@ export function DashboardSidebar({ role, titulo }: { role: "admin" | "organizado
         })}
       </nav>
       <div className="dashboard-sidebar-foot">
+        <Link href="/soporte" className="dashboard-nav-link">
+          {ICONS.pqrs}
+          <span className="label-text">Soporte</span>
+        </Link>
         <Link href="/cuenta/contrasena" className="dashboard-nav-link">
           {ICONS.password}
           <span className="label-text">Cambiar contraseña</span>

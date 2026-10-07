@@ -1,13 +1,12 @@
 import { requireAdmin } from "@/lib/admin";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { DashboardShell } from "@/components/dashboard-shell";
 
 export default async function CrmDashboardLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin();
+  const { user } = await requireAdmin();
 
   return (
-    <main className="container dashboard-shell">
-      <DashboardSidebar role="admin" titulo="Panel admin" />
-      <div className="dashboard-main">{children}</div>
-    </main>
+    <DashboardShell role="admin" titulo="Management" etiqueta="MONARCA · MANAGEMENT" inicial={user?.email ?? "M"}>
+      {children}
+    </DashboardShell>
   );
 }
