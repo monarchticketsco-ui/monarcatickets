@@ -268,3 +268,11 @@
 @media (prefers-reduced-motion: reduce) {
   .mq-grid .mq-ev { transition: none; }
 }
+
+/* Campo de contraseña con ojo */
+.mq-pass { position: relative; }
+.mq-pass input { padding-right: 52px; }
+.mq-pass-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; display: grid; place-items: center; border: 0; background: transparent; color: #8997ab; cursor: pointer; border-radius: 10px; }
+.mq-pass-toggle:hover { color: #fff; background: #ffffff0d; }
+.mq-pass-toggle:focus-visible { outline: 2px solid #176bff; }
+.mq-pass-toggle svg { width: 20px; height: 20px; }

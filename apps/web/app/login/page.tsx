@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { login } from "./actions";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { PasswordField } from "@/components/password-field";
 
 export const dynamic = "force-dynamic";
 
@@ -47,10 +48,7 @@ export default async function LoginPage({
               <label htmlFor="email">Email</label>
               <input id="email" name="email" type="email" autoComplete="email" required />
             </div>
-            <div className="mq-field">
-              <label htmlFor="password">Contraseña</label>
-              <input id="password" name="password" type="password" autoComplete="current-password" required />
-            </div>
+            <PasswordField />
             <p className="mq-linkrow">
               <Link href="/recuperar-password">¿Olvidaste tu contraseña?</Link>
             </p>

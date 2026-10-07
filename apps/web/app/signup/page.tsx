@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signup } from "./actions";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { PasswordField } from "@/components/password-field";
 
 export const dynamic = "force-dynamic";
 
@@ -59,10 +60,7 @@ export default async function SignupPage({
                   <label htmlFor="email">Email</label>
                   <input id="email" name="email" type="email" autoComplete="email" required />
                 </div>
-                <div className="mq-field">
-                  <label htmlFor="password">Contraseña</label>
-                  <input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
-                </div>
+                <PasswordField autoComplete="new-password" minLength={8} />
                 {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} action="signup" />}
                 <button type="submit" className="mq-btn mq-primary">
                   Crear cuenta
