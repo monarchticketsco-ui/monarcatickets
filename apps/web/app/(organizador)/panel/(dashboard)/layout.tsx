@@ -1,6 +1,5 @@
 import { requireOrganizer } from "@/lib/organizer";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { EventoSelector } from "@/components/evento-selector";
 import { getFourvenuesEventById } from "@/lib/fourvenues";
 
 export default async function PanelDashboardLayout({ children }: { children: React.ReactNode }) {
@@ -15,15 +14,11 @@ export default async function PanelDashboardLayout({ children }: { children: Rea
       role="organizador"
       titulo="Panel de Polinizador"
       evento={evento?.name ?? null}
+      eventos={eventos.map((e) => ({ id: e.id, nombre: e.evento?.name ?? "Evento no disponible" }))}
+      eventoActivo={organizer.fourvenues_event_id}
       etiqueta={evento ? `${organizer.legal_name} · ${evento.name}` : organizer.legal_name}
       inicial={organizer.legal_name}
     >
-      {eventos.length > 1 && (
-        <EventoSelector
-          activo={organizer.fourvenues_event_id}
-          eventos={eventos.map((e) => ({ id: e.id, nombre: e.evento?.name ?? "Evento no disponible" }))}
-        />
-      )}
       {children}
     </DashboardShell>
   );

@@ -12,7 +12,7 @@ export function EventoSelector({
 }) {
   return (
     <form action={seleccionarEventoActivo} className="mq-evento-selector">
-      <label htmlFor="mq-evento-activo">Evento</label>
+      <label htmlFor="mq-evento-activo" className="sr-only">Evento activo</label>
       <select
         id="mq-evento-activo"
         name="evento"

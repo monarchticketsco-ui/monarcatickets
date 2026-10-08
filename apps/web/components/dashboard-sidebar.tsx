@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { EventoSelector } from "@/components/evento-selector";
 
 const ICONS = {
   dashboard: (
@@ -142,10 +143,14 @@ export function DashboardSidebar({
   role,
   titulo,
   evento,
+  eventos,
+  eventoActivo,
 }: {
   role: "admin" | "organizador" | "comprador";
   titulo: string;
   evento?: string;
+  eventos?: { id: string; nombre: string }[];
+  eventoActivo?: string | null;
 }) {
   const pathname = usePathname();
   const items = NAV[role];
@@ -153,11 +158,18 @@ export function DashboardSidebar({
   return (
     <aside className="dashboard-sidebar">
       <div className="dashboard-sidebar-title">{titulo}</div>
-      {evento && (
+      {eventos && eventos.length > 1 ? (
         <div className="dashboard-sidebar-event">
           <small>Evento</small>
-          {evento}
+          <EventoSelector eventos={eventos} activo={eventoActivo ?? null} />
         </div>
+      ) : (
+        evento && (
+          <div className="dashboard-sidebar-event">
+            <small>Evento</small>
+            {evento}
+          </div>
+        )
       )}
       <nav className="dashboard-sidebar-nav">
         {items.map((item) => {

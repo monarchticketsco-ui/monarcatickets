@@ -6,6 +6,8 @@ export function DashboardShell({
   role,
   titulo,
   evento,
+  eventos,
+  eventoActivo,
   etiqueta,
   inicial,
   children,
@@ -13,13 +15,15 @@ export function DashboardShell({
   role: "admin" | "organizador" | "comprador";
   titulo: string;
   evento?: string | null;
+  eventos?: { id: string; nombre: string }[];
+  eventoActivo?: string | null;
   etiqueta: string;
   inicial?: string;
   children: React.ReactNode;
 }) {
   return (
     <main className="mq-scope mq-shell">
-      <DashboardSidebar role={role} titulo={titulo} evento={evento ?? undefined} />
+      <DashboardSidebar role={role} titulo={titulo} evento={evento ?? undefined} eventos={eventos} eventoActivo={eventoActivo} />
       <div className="dashboard-main">
         <div className="mq-topbar">
           <span>{etiqueta}</span>
