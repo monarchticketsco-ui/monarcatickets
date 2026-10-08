@@ -276,3 +276,8 @@
 .mq-pass-toggle:hover { color: #fff; background: #ffffff0d; }
 .mq-pass-toggle:focus-visible { outline: 2px solid #176bff; }
 .mq-pass-toggle svg { width: 20px; height: 20px; }
+
+/* Selector de evento del Panel Polinizador (varios eventos por organizador) */
+.mq-evento-selector { display: flex; align-items: center; gap: 12px; margin: 0 0 20px; }
+.mq-evento-selector label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8997ab; }
+.mq-evento-selector select { min-width: 240px; max-width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid #1c2a42; background: #0b1424; color: #e8eef7; font: inherit; }

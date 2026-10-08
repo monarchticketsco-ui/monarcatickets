@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { actualizarFichaOrganizador } from "../actions";
-import { getFourvenuesEventById, getFourvenuesTicketsByEvent } from "@/lib/fourvenues";
+import { actualizarFichaOrganizador, asignarEventoOrganizador, quitarEventoOrganizador } from "../actions";
+import { getFourvenuesEventById, getFourvenuesEvents, getFourvenuesTicketsByEvent } from "@/lib/fourvenues";
 import { moneda } from "@/lib/fv-admin";
 import { fechaCorta } from "@/lib/fv-format";
 
@@ -31,14 +31,31 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
 
   if (!organizador) notFound();
 
-  const eventoAsignado = organizador.fourvenues_event_id
-    ? await getFourvenuesEventById(organizador.fourvenues_event_id)
-    : null;
-  const tickets = eventoAsignado ? await getFourvenuesTicketsByEvent(eventoAsignado._id) : [];
-  const validos = tickets.filter((t) => t.status !== "refunded" && t.status !== "cancelled");
-  const ingresos = validos.reduce((acc, t) => acc + (t.total_price || 0), 0);
+  // Eventos asignados (varios por organizador) + respaldo del campo legacy.
+  const { data: filas } = await admin
+    .from("organizer_events")
+    .select("fourvenues_event_id")
+    .eq("organizer_id", id)
+    .order("created_at", { ascending: true });
+  const eventIds = (filas ?? []).map((f) => f.fourvenues_event_id as string);
+  if (organizador.fourvenues_event_id && !eventIds.includes(organizador.fourvenues_event_id)) {
+    eventIds.unshift(organizador.fourvenues_event_id);
+  }
+
+  const [asignados, catalogo] = await Promise.all([
+    Promise.all(
+      eventIds.map(async (eid) => {
+        const evento = await getFourvenuesEventById(eid);
+        const tickets = evento ? await getFourvenuesTicketsByEvent(evento._id) : [];
+        return { id: eid, evento, tickets };
+      })
+    ),
+    getFourvenuesEvents({ incluirPasados: true }).catch(() => []),
+  ]);
+  const disponibles = catalogo.filter((e) => !eventIds.includes(e._id));
 
   const actualizarFichaConId = actualizarFichaOrganizador.bind(null, id);
+  const asignarEventoConId = asignarEventoOrganizador.bind(null, id);
 
   return (
     <>
@@ -111,24 +128,6 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
             </div>
           </div>
           <div className="field">
-            <label htmlFor="fourvenues_event_id">Evento de FourVenues asignado (Panel Polinizador)</label>
-            <input
-              id="fourvenues_event_id"
-              name="fourvenues_event_id"
-              type="text"
-              placeholder="ID del evento en FourVenues (ej. gss0259prb0doouygcgf7y2rdc1q6prm)"
-              defaultValue={organizador.fourvenues_event_id ?? ""}
-            />
-            <p className="muted" style={{ fontSize: "0.78rem", margin: "4px 0 0" }}>
-              {eventoAsignado
-                ? `Evento actual: ${eventoAsignado.name} (${eventoAsignado.slug}).`
-                : organizador.fourvenues_event_id
-                  ? "No se encontro ese evento en FourVenues — revisa el ID."
-                  : "Sin evento asignado todavia: el Panel Polinizador de este organizador mostrara un aviso."}
-              {" "}El ID se copia de FourVenues (Management lo asigna, uno por organizador por ahora).
-            </p>
-          </div>
-          <div className="field">
             <label htmlFor="notas">Notas internas</label>
             <textarea id="notas" name="notas" rows={3} defaultValue={organizador.notas ?? ""} />
           </div>
@@ -138,61 +137,124 @@ export default async function OrganizadorDetallePage({ params }: { params: Promi
         </form>
       </div>
 
-      <h2>Evento y ventas (FourVenues)</h2>
-      {!eventoAsignado ? (
+      <h2>Eventos de FourVenues asignados</h2>
+      <p className="muted" style={{ maxWidth: "60ch" }}>
+        Un Polinizador puede tener varios eventos. En su panel elige cuál ver con un selector.
+      </p>
+      <div className="card" style={{ maxWidth: 620 }}>
+        {asignados.length === 0 ? (
+          <p className="muted" style={{ margin: "0 0 16px" }}>
+            Sin eventos asignados todavía: el Panel Polinizador de este organizador mostrará un aviso.
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px", display: "grid", gap: 10 }}>
+            {asignados.map(({ id: eid, evento }) => (
+              <li key={eid} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <span>
+                  {evento ? (
+                    <>
+                      <strong>{evento.name}</strong>
+                      <br />
+                      <small className="muted">{fechaCorta(evento)} · {evento.location?.name}</small>
+                    </>
+                  ) : (
+                    <>
+                      <strong>Evento no encontrado en FourVenues</strong>
+                      <br />
+                      <small className="muted">ID {eid} — revisa el ID.</small>
+                    </>
+                  )}
+                </span>
+                <form action={quitarEventoOrganizador.bind(null, id, eid)}>
+                  <button type="submit" className="btn">Quitar</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <form action={asignarEventoConId} className="form" style={{ maxWidth: "none" }}>
+          <div className="field">
+            <label htmlFor="evento_id">Agregar un evento</label>
+            <select id="evento_id" name="evento_id" defaultValue="">
+              <option value="">Elige un evento de FourVenues…</option>
+              {disponibles.map((e) => (
+                <option key={e._id} value={e._id}>
+                  {e.name} · {fechaCorta(e)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="evento_id_manual">…o pega su ID de FourVenues</label>
+            <input id="evento_id_manual" name="evento_id_manual" type="text" placeholder="ej. gss0259prb0doouygcgf7y2rdc1q6prm" />
+          </div>
+          <button type="submit" className="btn btn-primary">Agregar evento</button>
+        </form>
+      </div>
+
+      <h2>Eventos y ventas (FourVenues)</h2>
+      {asignados.length === 0 ? (
         <p className="empty-state">
-          Este Polinizador todavia no tiene un evento de FourVenues asignado. Asignalo en la ficha (campo "Evento de
-          FourVenues asignado") para que vea sus ventas en su panel.
+          Este Polinizador todavia no tiene eventos de FourVenues asignados. Agrega uno arriba para que vea sus ventas en
+          su panel.
         </p>
       ) : (
-        <>
-          <div className="stat-grid">
-            <div className="stat-card">
-              <div className="value" style={{ fontSize: "1.05rem" }}>{eventoAsignado.name}</div>
-              <div className="label">{fechaCorta(eventoAsignado)} · {eventoAsignado.location?.name}</div>
-            </div>
-            <div className="stat-card">
-              <div className="value">{validos.length}</div>
-              <div className="label">Entradas vendidas</div>
-            </div>
-            <div className="stat-card">
-              <div className="value">{moneda(ingresos, eventoAsignado.currency)}</div>
-              <div className="label">Ingresos brutos</div>
-            </div>
-          </div>
+        asignados.map(({ id: eid, evento, tickets }) => {
+          if (!evento) return null;
+          const validos = tickets.filter((t) => t.status !== "refunded" && t.status !== "cancelled");
+          const ingresos = validos.reduce((acc, t) => acc + (t.total_price || 0), 0);
+          return (
+            <section key={eid} style={{ marginBottom: 32 }}>
+              <div className="stat-grid">
+                <div className="stat-card">
+                  <div className="value" style={{ fontSize: "1.05rem" }}>{evento.name}</div>
+                  <div className="label">{fechaCorta(evento)} · {evento.location?.name}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="value">{validos.length}</div>
+                  <div className="label">Entradas vendidas</div>
+                </div>
+                <div className="stat-card">
+                  <div className="value">{moneda(ingresos, evento.currency)}</div>
+                  <div className="label">Ingresos brutos</div>
+                </div>
+              </div>
 
-          {tickets.length === 0 ? (
-            <p className="empty-state">Todavia no hay tickets emitidos para este evento.</p>
-          ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Asistente</th>
-                    <th>Correo</th>
-                    <th>Localidad</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tickets.slice(0, 100).map((t) => (
-                    <tr key={t._id}>
-                      <td>{t.full_name || "—"}</td>
-                      <td>{t.email || "—"}</td>
-                      <td>{eventoAsignado.ticket_rates?.find((r) => r._id === t.ticket_rate_id)?.name ?? "—"}</td>
-                      <td>{moneda(t.total_price || 0, eventoAsignado.currency)}</td>
-                      <td>
-                        <span className={TICKET_BADGE[t.status] ?? "badge"}>{t.status}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {tickets.length > 100 && <p className="muted">Mostrando 100 de {tickets.length} tickets.</p>}
-            </div>
-          )}
-        </>
+              {tickets.length === 0 ? (
+                <p className="empty-state">Todavia no hay tickets emitidos para este evento.</p>
+              ) : (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Asistente</th>
+                        <th>Correo</th>
+                        <th>Localidad</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tickets.slice(0, 100).map((t) => (
+                        <tr key={t._id}>
+                          <td>{t.full_name || "—"}</td>
+                          <td>{t.email || "—"}</td>
+                          <td>{evento.ticket_rates?.find((r) => r._id === t.ticket_rate_id)?.name ?? "—"}</td>
+                          <td>{moneda(t.total_price || 0, evento.currency)}</td>
+                          <td>
+                            <span className={TICKET_BADGE[t.status] ?? "badge"}>{t.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {tickets.length > 100 && <p className="muted">Mostrando 100 de {tickets.length} tickets.</p>}
+                </div>
+              )}
+            </section>
+          );
+        })
       )}
     </>
   );

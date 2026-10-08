@@ -129,7 +129,6 @@ export async function actualizarFichaOrganizador(organizerId: string, formData: 
   const commercialOwner = String(formData.get("commercial_owner") || "").trim();
   const commissionRaw = String(formData.get("commission_rate") || "").trim();
   const notas = String(formData.get("notas") || "").trim();
-  const fourvenuesEventId = String(formData.get("fourvenues_event_id") || "").trim();
 
   const admin = createAdminClient();
   const { error } = await admin
@@ -143,7 +142,6 @@ export async function actualizarFichaOrganizador(organizerId: string, formData: 
       commercial_owner: commercialOwner || null,
       commission_rate: commissionRaw === "" ? undefined : Number(commissionRaw),
       notas: notas || null,
-      fourvenues_event_id: fourvenuesEventId || null,
     })
     .eq("id", organizerId);
 
@@ -153,4 +151,53 @@ export async function actualizarFichaOrganizador(organizerId: string, formData: 
 
   revalidatePath(`/crm/organizadores/${organizerId}`);
   revalidatePath("/crm", "layout");
+}
+
+// ---------------------------------------------------------------------
+// Eventos de FourVenues asignados al organizador (puede tener varios).
+// ---------------------------------------------------------------------
+export async function asignarEventoOrganizador(organizerId: string, formData: FormData) {
+  await requireAdmin();
+
+  const manual = String(formData.get("evento_id_manual") || "").trim();
+  const elegido = String(formData.get("evento_id") || "").trim();
+  const eventoId = manual || elegido;
+  if (!eventoId) return;
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("organizer_events")
+    .upsert({ organizer_id: organizerId, fourvenues_event_id: eventoId }, { onConflict: "organizer_id,fourvenues_event_id" });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/crm/organizadores/${organizerId}`);
+  revalidatePath("/panel", "layout");
+}
+
+export async function quitarEventoOrganizador(organizerId: string, eventoId: string) {
+  await requireAdmin();
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("organizer_events")
+    .delete()
+    .eq("organizer_id", organizerId)
+    .eq("fourvenues_event_id", eventoId);
+
+  // Si era el evento del campo legacy, tambien se limpia para que no reaparezca.
+  await admin
+    .from("organizers")
+    .update({ fourvenues_event_id: null })
+    .eq("id", organizerId)
+    .eq("fourvenues_event_id", eventoId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/crm/organizadores/${organizerId}`);
+  revalidatePath("/panel", "layout");
 }
