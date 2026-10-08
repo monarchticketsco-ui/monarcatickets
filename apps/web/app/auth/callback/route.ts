@@ -18,7 +18,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(
-    `${origin}/recuperar-password?error=${encodeURIComponent("El enlace no es valido o ya expiro. Solicita uno nuevo.")}`
-  );
+  // Si el enlace falla: en recuperacion de contrasena se pide uno nuevo;
+  // en confirmacion de registro la cuenta ya puede estar confirmada.
+  const esRecuperacion = next.startsWith("/restablecer-password");
+  const destino = esRecuperacion ? "/recuperar-password" : "/login";
+  const mensaje = esRecuperacion
+    ? "El enlace no es valido o ya expiro. Solicita uno nuevo."
+    : "El enlace ya se uso o expiro. Si ya confirmaste tu correo, inicia sesion.";
+  return NextResponse.redirect(`${origin}${destino}?error=${encodeURIComponent(mensaje)}`);
 }

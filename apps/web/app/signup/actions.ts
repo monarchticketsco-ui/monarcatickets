@@ -16,10 +16,15 @@ export async function signup(formData: FormData) {
   // role=organizador en el POST igual queda como comprador.
   const role = "comprador";
 
+  // A donde vuelve el usuario al tocar el enlace del correo de confirmacion.
+  // Sin esto Supabase usa su "Site URL" (que puede quedar en localhost).
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.monarcatickets.com").replace(/\/$/, "");
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/mi-cuenta`,
       data: { role, full_name: fullName },
       ...(captchaToken ? { captchaToken: String(captchaToken) } : {}),
     },
